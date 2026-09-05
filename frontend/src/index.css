@@ -1,0 +1,36 @@
+:root {
+  --primary: #4169e1;
+  --primary-dark: #3553c4;
+  --primary-darker: #2b44a4;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --bg: #f3f5f9;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --border: #d1d5db;
+  --focus-ring: rgba(65, 105, 225, 0.35);
+  --error: #dc2626;
+  --success: #16a34a;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  color-scheme: light;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+#root {
+  min-height: 100vh;
+}

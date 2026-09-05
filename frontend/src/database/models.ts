@@ -6,6 +6,7 @@ export interface Usuario {
   id: string
   nombre: string
   rol: Rol
+  contrasena?: string
   createdAt: number
   updatedAt: number
 }

@@ -5,6 +5,7 @@ interface ApiUsuario {
   id: string
   nombre: string
   rol: Usuario['rol']
+  contrasena?: string
   createdAt: string
   updatedAt: string
   _count?: { prestamos: number }
@@ -22,6 +23,7 @@ export async function sincronizarUsuarios(): Promise<void> {
     id: u.id,
     nombre: u.nombre,
     rol: u.rol,
+    contrasena: u.contrasena,
     createdAt: new Date(u.createdAt).getTime(),
     updatedAt: new Date(u.updatedAt).getTime(),
   }))
