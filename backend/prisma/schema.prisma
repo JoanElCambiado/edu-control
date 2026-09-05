@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMINISTRADOR
+  RECEPCION
+  USUARIO
+}
+
+enum EstadoPrestamo {
+  prestado
+  devuelto
+  atrasado
+}
+
+/// Usuario que solicita herramientas en préstamo.
+model Usuario {
+  id         String       @id @default(uuid()) @db.Uuid
+  nombre     String
+  rol        Rol
+  contrasena String?
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  prestamos  Prestamo[]
+
+  @@map("usuarios")
+}
+
+/// Herramienta del catálogo disponible para préstamo.
+model Herramienta {
+  id          String     @id @default(uuid()) @db.Uuid
+  nombre      String
+  descripcion String?
+  cantidad    Int
+  disponible  Boolean    @default(true)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  prestamos   Prestamo[]
+
+  @@map("herramientas")
+}
+
+/// Proyecto al que se asocia un préstamo (opcional).
+model Proyecto {
+  id          String     @id @default(uuid()) @db.Uuid
+  nombre      String
+  descripcion String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  prestamos   Prestamo[]
+
+  @@map("proyectos")
+}
+
+/// Préstamo de una herramienta a un usuario, opcionalmente ligado a un proyecto.
+model Prestamo {
+  id                      String          @id @default(uuid()) @db.Uuid
+  herramientaId           String          @map("herramienta_id") @db.Uuid
+  usuarioId               String          @map("usuario_id") @db.Uuid
+  proyectoId              String?         @map("proyecto_id") @db.Uuid
+  fechaSalida             DateTime        @default(now()) @map("fecha_salida")
+  fechaDevolucionEsperada DateTime        @map("fecha_devolucion_esperada")
+  fechaDevolucionReal     DateTime?       @map("fecha_devolucion_real")
+  estado                  EstadoPrestamo  @default(prestado)
+  createdAt               DateTime        @default(now()) @map("created_at")
+  herramienta             Herramienta     @relation(fields: [herramientaId], references: [id])
+  usuario                 Usuario         @relation(fields: [usuarioId], references: [id])
+  proyecto                Proyecto?       @relation(fields: [proyectoId], references: [id])
+
+  @@index([herramientaId])
+  @@index([usuarioId])
+  @@index([proyectoId])
+  @@map("prestamos")
+}

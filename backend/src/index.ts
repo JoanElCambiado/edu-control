@@ -7,15 +7,6 @@ import herramientasRouter from './routes/herramientas.js'
 import prestamosRouter from './routes/prestamos.js'
 import syncRouter from './routes/sync.js'
 
-async function seed() {
-  const admin = await prisma.usuario.findFirst({ where: { rol: 'ADMINISTRADOR' } })
-  if (admin) return
-  const created = await prisma.usuario.create({
-    data: { nombre: 'Administrador', rol: 'ADMINISTRADOR' },
-  })
-  console.log(`Seed: usuario administrador creado (${created.id})`)
-}
-
 const app = express()
 
 app.use(cors())
@@ -52,7 +43,6 @@ app.use(
 const port = Number(process.env.PORT ?? 4000)
 
 async function main() {
-  await seed()
   app.listen(port, () => {
     console.log(`API escuchando en http://localhost:${port}`)
   })

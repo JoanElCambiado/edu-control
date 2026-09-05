@@ -10,7 +10,11 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
-    "prisma:validate": "prisma validate"
+    "prisma:validate": "prisma validate",
+    "prisma:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",
