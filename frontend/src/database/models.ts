@@ -1,0 +1,41 @@
+export type Rol = 'ADMINISTRADOR' | 'RECEPCION' | 'USUARIO'
+
+export type EstadoPrestamo = 'prestado' | 'devuelto' | 'atrasado'
+
+export interface Usuario {
+  id: string
+  nombre: string
+  rol: Rol
+  createdAt: number
+  updatedAt: number
+}
+
+export interface Herramienta {
+  id: string
+  nombre: string
+  descripcion?: string
+  cantidad: number
+  disponible: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface Proyecto {
+  id: string
+  nombre: string
+  descripcion?: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface Prestamo {
+  id: string
+  herramientaId: string
+  usuarioId: string
+  proyectoId?: string
+  fechaSalida: number
+  fechaDevolucionEsperada: number
+  fechaDevolucionReal?: number
+  estado: EstadoPrestamo
+  createdAt: number
+}
