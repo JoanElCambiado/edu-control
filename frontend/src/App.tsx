@@ -5,6 +5,7 @@ import DashboardRecepcion from './components/DashboardRecepcion'
 import Login from './components/Login'
 import NuevoPrestamo from './components/NuevoPrestamo'
 import PanelUsuario from './components/PanelUsuario'
+import ReportesAdmin from './components/ReportesAdmin'
 import type { Rol } from './database/models'
 import { obtenerSesion } from './services/session'
 import { sincronizarUsuarios } from './services/syncService'
@@ -72,6 +73,14 @@ function App() {
           element={
             <ProtectedRoute roles={['USUARIO']}>
               <PanelUsuario />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reportes"
+          element={
+            <ProtectedRoute roles={['ADMINISTRADOR']}>
+              <ReportesAdmin />
             </ProtectedRoute>
           }
         />

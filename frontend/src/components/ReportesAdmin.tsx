@@ -1,16 +1,11 @@
-import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { cerrarSesion, obtenerSesion } from '../services/session'
-import FormularioHerramienta from './FormularioHerramienta'
+import './ReportesAdmin.css'
 import './DashboardAdmin.css'
 
-const SECCIONES = ['Catálogo de Herramientas', 'Préstamos'] as const
-type Seccion = (typeof SECCIONES)[number]
-
-function DashboardAdmin() {
+function ReportesAdmin() {
   const sesion = obtenerSesion()
   const navigate = useNavigate()
-  const [activa, setActiva] = useState<Seccion>('Catálogo de Herramientas')
 
   if (!sesion || sesion.rol !== 'ADMINISTRADOR') {
     return <Navigate to="/login" replace />
@@ -24,30 +19,20 @@ function DashboardAdmin() {
   }
 
   return (
-    <div className="dashboard">
+    <div className="reportes">
       <aside className="dashboard-sidebar">
         <h1 className="dashboard-brand">Edu Control</h1>
         <nav className="dashboard-nav">
-          {SECCIONES.map((seccion) => (
-            <button
-              key={seccion}
-              type="button"
-              className={`dashboard-nav-button${activa === seccion ? ' dashboard-nav-button--active' : ''}`}
-              onClick={() => setActiva(seccion)}
-            >
-              {seccion}
-            </button>
-          ))}
           <button
-            type="button"
             className="dashboard-nav-button"
-            onClick={() => navigate('/reportes')}
+            type="button"
+            onClick={() => navigate('/dashboard')}
           >
-            Reportes
+            Volver
           </button>
           <button
-            type="button"
             className="dashboard-nav-button dashboard-nav-button--danger"
+            type="button"
             onClick={handleCerrarSesion}
           >
             Cerrar Sesión
@@ -59,17 +44,28 @@ function DashboardAdmin() {
       </aside>
 
       <main className="dashboard-content">
-        {activa === 'Catálogo de Herramientas' ? (
-          <FormularioHerramienta />
-        ) : (
-          <>
-            <h2 className="dashboard-title">{activa}</h2>
-            <p className="dashboard-placeholder">Sección en construcción.</p>
-          </>
-        )}
+        <h2 className="dashboard-title">Reportes</h2>
+
+        <div className="reportes-grid">
+          <article className="reportes-card">
+            <h3 className="reportes-card-title">Préstamos Activos</h3>
+            <p className="reportes-card-valor">0</p>
+            <p className="reportes-card-detalle">Préstamos en curso en este momento</p>
+          </article>
+
+          <article className="reportes-card">
+            <h3 className="reportes-card-title">Herramientas más prestadas</h3>
+            <p className="reportes-card-vacio">Sin datos por ahora</p>
+          </article>
+
+          <article className="reportes-card">
+            <h3 className="reportes-card-title">Usuarios morosos</h3>
+            <p className="reportes-card-vacio">Sin datos por ahora</p>
+          </article>
+        </div>
       </main>
     </div>
   )
 }
 
-export default DashboardAdmin
+export default ReportesAdmin
