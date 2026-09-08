@@ -34,14 +34,16 @@ model Usuario {
 
 /// Herramienta del catálogo disponible para préstamo.
 model Herramienta {
-  id          String     @id @default(uuid()) @db.Uuid
-  nombre      String
-  descripcion String?
-  cantidad    Int
-  disponible  Boolean    @default(true)
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
-  prestamos   Prestamo[]
+  id           String     @id @default(uuid()) @db.Uuid
+  nombre       String
+  categoria    String     @default("General")
+  estadoFisico String     @default("bueno") @map("estado_fisico")
+  descripcion  String?
+  cantidad     Int
+  disponible   Boolean    @default(true)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  prestamos    Prestamo[]
 
   @@map("herramientas")
 }
