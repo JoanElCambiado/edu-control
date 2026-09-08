@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { cerrarSesion, obtenerSesion } from '../services/session'
+import { sincronizarDatos } from '../services/syncService'
 import FormularioHerramienta from './FormularioHerramienta'
 import './DashboardAdmin.css'
 
@@ -11,9 +12,23 @@ function DashboardAdmin() {
   const sesion = obtenerSesion()
   const navigate = useNavigate()
   const [activa, setActiva] = useState<Seccion>('Catálogo de Herramientas')
+  const [sincronizando, setSincronizando] = useState(false)
 
   if (!sesion || sesion.rol !== 'ADMINISTRADOR') {
     return <Navigate to="/login" replace />
+  }
+
+  const handleSincronizar = async () => {
+    setSincronizando(true)
+    try {
+      await sincronizarDatos()
+      window.alert('Sincronización completada')
+    } catch (err) {
+      console.error('Error al sincronizar:', err)
+      window.alert('No se pudo sincronizar. Revisa tu conexión a la nube.')
+    } finally {
+      setSincronizando(false)
+    }
   }
 
   const handleCerrarSesion = () => {
@@ -44,6 +59,14 @@ function DashboardAdmin() {
             onClick={() => navigate('/reportes')}
           >
             Reportes
+          </button>
+          <button
+            type="button"
+            className="dashboard-nav-button"
+            disabled={sincronizando}
+            onClick={handleSincronizar}
+          >
+            {sincronizando ? 'Sincronizando…' : 'Sincronizar con la Nube'}
           </button>
           <button
             type="button"
