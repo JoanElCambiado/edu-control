@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../database/db'
-import type { Prestamo, Usuario } from '../database/models'
+import type { Prestamo, Proyecto, Usuario } from '../database/models'
 import { uuidv4 } from '../database/uuid'
 import { cerrarSesion, obtenerSesion } from '../services/session'
 import './NuevoPrestamo.css'
@@ -15,6 +15,9 @@ function NuevoPrestamo() {
   const [proyectoId, setProyectoId] = useState('')
   const [fechaDevolucion, setFechaDevolucion] = useState('')
   const [error, setError] = useState('')
+  const [mostrarFormProyecto, setMostrarFormProyecto] = useState(false)
+  const [nombreProyecto, setNombreProyecto] = useState('')
+  const [errorProyecto, setErrorProyecto] = useState('')
 
   const herramientasDisponibles = useLiveQuery(async () => {
     const todas = await db.herramientas.toArray()
@@ -93,6 +96,27 @@ function NuevoPrestamo() {
     if (!acepta) return
     cerrarSesion()
     navigate('/')
+  }
+
+  const handleGuardarProyecto = async () => {
+    const nombre = nombreProyecto.trim()
+    if (!nombre) {
+      setErrorProyecto('Escribe el nombre del proyecto')
+      return
+    }
+
+    const proyecto: Proyecto = {
+      id: uuidv4(),
+      nombre,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+
+    await db.proyectos.add(proyecto)
+    setProyectoId(proyecto.id)
+    setNombreProyecto('')
+    setErrorProyecto('')
+    setMostrarFormProyecto(false)
   }
 
   const cargandoInventario = herramientasDisponibles === undefined
@@ -176,9 +200,18 @@ function NuevoPrestamo() {
           </div>
 
           <div className="prestamo-field">
-            <label className="prestamo-label" htmlFor="prestamo-proyecto">
-              Proyecto Educativo
-            </label>
+            <div className="prestamo-field-row">
+              <label className="prestamo-label" htmlFor="prestamo-proyecto">
+                Proyecto Educativo
+              </label>
+              <button
+                className="prestamo-mini-button"
+                type="button"
+                onClick={() => setMostrarFormProyecto((visible) => !visible)}
+              >
+                {mostrarFormProyecto ? 'Cancelar' : '+ Nuevo Proyecto'}
+              </button>
+            </div>
             {proyectos === undefined ? (
               <p className="prestamo-placeholder">Cargando proyectos…</p>
             ) : (
@@ -196,6 +229,38 @@ function NuevoPrestamo() {
                   </option>
                 ))}
               </select>
+            )}
+
+            {mostrarFormProyecto && (
+              <div className="prestamo-subform">
+                <input
+                  className="prestamo-input"
+                  id="prestamo-nuevo-proyecto"
+                  name="nombreProyecto"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="Nombre del proyecto"
+                  value={nombreProyecto}
+                  onChange={(e) => {
+                    setNombreProyecto(e.target.value)
+                    if (errorProyecto) setErrorProyecto('')
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleGuardarProyecto()
+                    }
+                  }}
+                />
+                <button
+                  className="prestamo-mini-button prestamo-mini-button--solid"
+                  type="button"
+                  onClick={handleGuardarProyecto}
+                >
+                  Guardar Proyecto
+                </button>
+                {errorProyecto && <p className="prestamo-error">{errorProyecto}</p>}
+              </div>
             )}
           </div>
 
