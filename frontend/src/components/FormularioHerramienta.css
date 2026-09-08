@@ -31,8 +31,17 @@
   border-color: var(--primary);
 }
 
-.herramienta-button {
+.herramienta-actions {
   grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+}
+
+.herramienta-actions .herramienta-button {
+  flex: 1;
+}
+
+.herramienta-button {
   padding: 15px;
   font-size: 20px;
   font-weight: 700;
@@ -46,6 +55,15 @@
 .herramienta-button:hover,
 .herramienta-button:focus-visible {
   background: var(--primary-dark);
+}
+
+.herramienta-button--secondary {
+  background: var(--text-light);
+}
+
+.herramienta-button--secondary:hover,
+.herramienta-button--secondary:focus-visible {
+  background: var(--text);
 }
 
 .herramienta-success {
@@ -94,6 +112,36 @@
 .herramienta-empty {
   font-size: 18px;
   color: var(--text-light);
+}
+
+.herramienta-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.herramienta-btn-accion {
+  padding: 8px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.herramienta-btn-accion:hover,
+.herramienta-btn-accion:focus-visible {
+  background: var(--primary-dark);
+}
+
+.herramienta-btn-accion--danger {
+  background: var(--error);
+}
+
+.herramienta-btn-accion--danger:hover,
+.herramienta-btn-accion--danger:focus-visible {
+  background: #b91c1c;
 }
 
 @media (max-width: 720px) {

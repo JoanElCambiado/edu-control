@@ -21,6 +21,8 @@ function FormularioHerramienta() {
   const [estadoFisico, setEstadoFisico] = useState<EstadoFisico>('bueno')
   const [cantidad, setCantidad] = useState(1)
   const [mensaje, setMensaje] = useState('')
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [editandoCreatedAt, setEditandoCreatedAt] = useState<number | null>(null)
 
   const herramientas = useLiveQuery(
     () => db.herramientas.orderBy('nombre').toArray(),
@@ -32,29 +34,65 @@ function FormularioHerramienta() {
     setMensaje('')
 
     const ahora = Date.now()
-    const nueva: Herramienta = {
-      id: uuidv4(),
+    const datos: Herramienta = {
+      id: editandoId ?? uuidv4(),
       nombre: nombre.trim(),
       categoria: categoria.trim(),
       estadoFisico,
       cantidad,
       disponible: true,
-      createdAt: ahora,
+      createdAt: editandoCreatedAt ?? ahora,
       updatedAt: ahora,
     }
 
-    await db.herramientas.add(nueva)
+    if (editandoId) {
+      await db.herramientas.update(editandoId, datos)
+      setMensaje('Herramienta actualizada')
+    } else {
+      await db.herramientas.add(datos)
+      setMensaje('Herramienta guardada')
+    }
 
+    setEditandoId(null)
+    setEditandoCreatedAt(null)
     setNombre('')
     setCategoria('')
     setEstadoFisico('bueno')
     setCantidad(1)
-    setMensaje('Herramienta guardada')
+  }
+
+  const handleEditar = (herramienta: Herramienta) => {
+    setEditandoId(herramienta.id)
+    setEditandoCreatedAt(herramienta.createdAt)
+    setNombre(herramienta.nombre)
+    setCategoria(herramienta.categoria)
+    setEstadoFisico(herramienta.estadoFisico)
+    setCantidad(herramienta.cantidad)
+    setMensaje('')
+  }
+
+  const handleEditarCancelar = () => {
+    setEditandoId(null)
+    setEditandoCreatedAt(null)
+    setNombre('')
+    setCategoria('')
+    setEstadoFisico('bueno')
+    setCantidad(1)
+    setMensaje('')
+  }
+
+  const handleEliminar = async (herramienta: Herramienta) => {
+    const confirmado = window.confirm(`¿Eliminar "${herramienta.nombre}" del catálogo?`)
+    if (!confirmado) return
+    await db.herramientas.delete(herramienta.id)
+    setMensaje('Herramienta eliminada')
   }
 
   return (
     <section className="herramienta">
-      <h2 className="dashboard-title">Catálogo de Herramientas</h2>
+      <h2 className="dashboard-title">
+        {editandoId ? 'Editar Herramienta' : 'Catálogo de Herramientas'}
+      </h2>
 
       <form className="herramienta-form" onSubmit={handleSubmit}>
         <div className="herramienta-field">
@@ -124,9 +162,20 @@ function FormularioHerramienta() {
 
         {mensaje && <p className="herramienta-success">{mensaje}</p>}
 
-        <button className="herramienta-button" type="submit">
-          Guardar Herramienta
-        </button>
+        <div className="herramienta-actions">
+          <button className="herramienta-button" type="submit">
+            {editandoId ? 'Guardar Cambios' : 'Guardar Herramienta'}
+          </button>
+          {editandoId && (
+            <button
+              className="herramienta-button herramienta-button--secondary"
+              type="button"
+              onClick={handleEditarCancelar}
+            >
+              Cancelar edición
+            </button>
+          )}
+        </div>
       </form>
 
       <h3 className="herramienta-list-title">Herramientas registradas</h3>
@@ -139,6 +188,7 @@ function FormularioHerramienta() {
               <th>Categoría</th>
               <th>Estado</th>
               <th>Stock</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -148,6 +198,22 @@ function FormularioHerramienta() {
                 <td>{h.categoria}</td>
                 <td>{etiquetaEstado(h.estadoFisico)}</td>
                 <td>{h.cantidad}</td>
+                <td className="herramienta-acciones">
+                  <button
+                    className="herramienta-btn-accion"
+                    type="button"
+                    onClick={() => handleEditar(h)}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className="herramienta-btn-accion herramienta-btn-accion--danger"
+                    type="button"
+                    onClick={() => handleEliminar(h)}
+                  >
+                    Eliminar
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
