@@ -151,7 +151,7 @@ function NuevoPrestamo() {
                 </option>
                 {herramientasDisponibles.map((herramienta) => (
                   <option key={herramienta.id} value={herramienta.id}>
-                    {herramienta.nombre} — {herramienta.categoria}
+                    {herramienta.nombre} - Disponibles: {herramienta.cantidad}
                   </option>
                 ))}
               </select>
