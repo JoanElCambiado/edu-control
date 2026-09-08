@@ -22,7 +22,7 @@ function NuevoPrestamo() {
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   }, [])
 
-  const destinoVolver = sesion && sesion.rol === 'ADMINISTRADOR' ? '/dashboard' : '/recepcion'
+  const esAdministrador = sesion?.rol === 'ADMINISTRADOR'
 
   const ahora = new Date()
   const fechaMinima = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`
@@ -94,13 +94,15 @@ function NuevoPrestamo() {
       <aside className="dashboard-sidebar">
         <h1 className="dashboard-brand">Edu Control</h1>
         <nav className="dashboard-nav">
-          <button
-            className="dashboard-nav-button"
-            type="button"
-            onClick={() => navigate(destinoVolver)}
-          >
-            Volver
-          </button>
+          {esAdministrador && (
+            <button
+              className="dashboard-nav-button"
+              type="button"
+              onClick={() => navigate('/dashboard')}
+            >
+              Volver
+            </button>
+          )}
           <button
             className="dashboard-nav-button dashboard-nav-button--danger"
             type="button"

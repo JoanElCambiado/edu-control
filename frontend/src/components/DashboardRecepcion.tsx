@@ -1,4 +1,4 @@
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { cerrarSesion, obtenerSesion } from '../services/session'
 import './DashboardAdmin.css'
 
@@ -17,18 +17,21 @@ function DashboardRecepcion() {
     navigate('/')
   }
 
+  const hoy = new Date().toLocaleDateString('es-MX', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+
   return (
     <div className="dashboard">
       <aside className="dashboard-sidebar">
         <h1 className="dashboard-brand">Edu Control</h1>
         <nav className="dashboard-nav">
-          <button
-            className="dashboard-nav-button dashboard-nav-button--active"
-            type="button"
-            onClick={() => navigate('/prestamos/nuevo')}
-          >
+          <Link className="dashboard-nav-button dashboard-nav-button--active" to="/nuevo-prestamo">
             Registrar Nuevo Préstamo
-          </button>
+          </Link>
           <button
             className="dashboard-nav-button dashboard-nav-button--danger"
             type="button"
@@ -44,7 +47,10 @@ function DashboardRecepcion() {
 
       <main className="dashboard-content">
         <h2 className="dashboard-title">Módulo de Recepción</h2>
-        <p className="dashboard-placeholder">Seleccione una opción del menú.</p>
+        <p className="dashboard-placeholder">{hoy}</p>
+        <p className="dashboard-placeholder">
+          Use «Registrar Nuevo Préstamo» para prestar una herramienta del catálogo.
+        </p>
       </main>
     </div>
   )

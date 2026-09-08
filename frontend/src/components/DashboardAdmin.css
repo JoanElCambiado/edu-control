@@ -27,10 +27,12 @@
 }
 
 .dashboard-nav-button {
+  display: block;
   padding: 16px;
   font-size: 19px;
   font-weight: 600;
   text-align: left;
+  text-decoration: none;
   color: #ffffff;
   background: transparent;
   border: none;
