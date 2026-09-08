@@ -17,4 +17,8 @@ db.version(1).stores({
   prestamos: 'id, herramientaId, usuarioId, proyectoId, estado, fechaDevolucionEsperada',
 })
 
+db.version(2).stores({
+  herramientas: 'id, nombre, categoria',
+})
+
 export { db }

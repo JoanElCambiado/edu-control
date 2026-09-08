@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { cerrarSesion, obtenerSesion } from '../services/session'
+import FormularioHerramienta from './FormularioHerramienta'
 import './DashboardAdmin.css'
 
 const SECCIONES = ['Catálogo de Herramientas', 'Préstamos'] as const
@@ -49,8 +50,14 @@ function DashboardAdmin() {
       </aside>
 
       <main className="dashboard-content">
-        <h2 className="dashboard-title">{activa}</h2>
-        <p className="dashboard-placeholder">Sección en construcción.</p>
+        {activa === 'Catálogo de Herramientas' ? (
+          <FormularioHerramienta />
+        ) : (
+          <>
+            <h2 className="dashboard-title">{activa}</h2>
+            <p className="dashboard-placeholder">Sección en construcción.</p>
+          </>
+        )}
       </main>
     </div>
   )

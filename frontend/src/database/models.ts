@@ -11,10 +11,13 @@ export interface Usuario {
   updatedAt: number
 }
 
+export type EstadoFisico = 'excelente' | 'bueno' | 'regular' | 'mantenimiento'
+
 export interface Herramienta {
   id: string
   nombre: string
-  descripcion?: string
+  categoria: string
+  estadoFisico: EstadoFisico
   cantidad: number
   disponible: boolean
   createdAt: number
