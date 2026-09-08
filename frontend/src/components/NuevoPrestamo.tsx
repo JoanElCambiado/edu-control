@@ -74,6 +74,8 @@ function NuevoPrestamo() {
   }
 
   const handleCerrarSesion = () => {
+    const acepta = window.confirm('¿Desea cerrar sesión?')
+    if (!acepta) return
     cerrarSesion()
     navigate('/')
   }
