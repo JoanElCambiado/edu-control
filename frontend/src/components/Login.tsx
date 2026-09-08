@@ -1,12 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../database/db'
-import {
-  cerrarSesion,
-  guardarSesion,
-  obtenerSesion,
-  type SesionUsuario,
-} from '../services/session'
+import { guardarSesion } from '../services/session'
 import { validarUsuario } from '../utils/validations'
 import './Login.css'
 
@@ -14,7 +9,6 @@ function Login() {
   const [usuario, setUsuario] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState('')
-  const [sesion, setSesion] = useState<SesionUsuario | null>(() => obtenerSesion())
   const navigate = useNavigate()
 
   const usuarioInvalido = usuario.length > 0 && !validarUsuario(usuario)
@@ -34,41 +28,15 @@ function Login() {
       return
     }
 
-    const nuevaSesion: SesionUsuario = {
-      id: encontrado.id,
-      nombre: encontrado.nombre,
-      rol: encontrado.rol,
-    }
-    guardarSesion(nuevaSesion)
-    setSesion(nuevaSesion)
-    if (nuevaSesion.rol === 'ADMINISTRADOR') {
+    guardarSesion({ id: encontrado.id, nombre: encontrado.nombre, rol: encontrado.rol })
+
+    if (encontrado.rol === 'ADMINISTRADOR') {
       navigate('/dashboard')
-    } else if (nuevaSesion.rol === 'RECEPCION') {
-      navigate('/recepcion')
+    } else if (encontrado.rol === 'RECEPCION') {
+      navigate('/nuevo-prestamo')
+    } else {
+      navigate('/')
     }
-  }
-
-  const handleLogout = () => {
-    cerrarSesion()
-    setSesion(null)
-    setUsuario('')
-    setContrasena('')
-    setError('')
-  }
-
-  if (sesion) {
-    return (
-      <main className="login">
-        <section className="login-card">
-          <h1 className="login-title">Bienvenido, {sesion.nombre}</h1>
-          <p className="login-subtitle">Rol: {sesion.rol}</p>
-          <p className="login-success">Inicio de sesión exitoso</p>
-          <button className="login-button" type="button" onClick={handleLogout}>
-            Salir
-          </button>
-        </section>
-      </main>
-    )
   }
 
   return (

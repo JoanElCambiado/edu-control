@@ -54,6 +54,28 @@
   background: var(--primary-dark);
 }
 
+.prestamo-button:disabled {
+  background: var(--border);
+  cursor: not-allowed;
+}
+
+.prestamo-error {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--error);
+}
+
+.prestamo-success {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.prestamo-placeholder {
+  font-size: 17px;
+  color: var(--text-light);
+}
+
 @media (max-width: 720px) {
   .prestamo {
     flex-direction: column;

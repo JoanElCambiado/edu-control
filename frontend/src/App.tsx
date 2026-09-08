@@ -56,7 +56,7 @@ function App() {
           }
         />
         <Route
-          path="/prestamos/nuevo"
+          path="/nuevo-prestamo"
           element={
             <ProtectedRoute roles={['RECEPCION', 'ADMINISTRADOR']}>
               <NuevoPrestamo />

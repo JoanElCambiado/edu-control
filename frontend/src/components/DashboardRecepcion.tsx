@@ -12,7 +12,7 @@ function DashboardRecepcion() {
 
   const handleCerrarSesion = () => {
     cerrarSesion()
-    navigate('/login')
+    navigate('/')
   }
 
   return (

@@ -18,7 +18,7 @@ function DashboardAdmin() {
 
   const handleCerrarSesion = () => {
     cerrarSesion()
-    navigate('/login')
+    navigate('/')
   }
 
   return (
