@@ -43,6 +43,8 @@ function Login() {
     setSesion(nuevaSesion)
     if (nuevaSesion.rol === 'ADMINISTRADOR') {
       navigate('/dashboard')
+    } else if (nuevaSesion.rol === 'RECEPCION') {
+      navigate('/recepcion')
     }
   }
 
