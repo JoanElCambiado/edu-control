@@ -4,6 +4,7 @@ import DashboardAdmin from './components/DashboardAdmin'
 import DashboardRecepcion from './components/DashboardRecepcion'
 import Login from './components/Login'
 import NuevoPrestamo from './components/NuevoPrestamo'
+import PanelUsuario from './components/PanelUsuario'
 import type { Rol } from './database/models'
 import { obtenerSesion } from './services/session'
 import { sincronizarUsuarios } from './services/syncService'
@@ -23,6 +24,9 @@ function DefaultRedirect() {
   }
   if (sesion?.rol === 'RECEPCION') {
     return <Navigate to="/recepcion" replace />
+  }
+  if (sesion?.rol === 'USUARIO') {
+    return <Navigate to="/usuario" replace />
   }
   return <Navigate to="/login" replace />
 }
@@ -60,6 +64,14 @@ function App() {
           element={
             <ProtectedRoute roles={['RECEPCION', 'ADMINISTRADOR']}>
               <NuevoPrestamo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/usuario"
+          element={
+            <ProtectedRoute roles={['USUARIO']}>
+              <PanelUsuario />
             </ProtectedRoute>
           }
         />

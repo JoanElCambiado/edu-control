@@ -35,7 +35,7 @@ function Login() {
     } else if (encontrado.rol === 'RECEPCION') {
       navigate('/nuevo-prestamo')
     } else {
-      navigate('/')
+      navigate('/usuario')
     }
   }
 
