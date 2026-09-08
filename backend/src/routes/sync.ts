@@ -32,15 +32,16 @@ interface SyncPayload {
     herramientaId: string
     usuarioId: string
     proyectoId?: string | null
-    fechaSalida?: string | Date
-    fechaDevolucionEsperada: string | Date
-    fechaDevolucionReal?: string | Date | null
+    fechaSalida?: string | number | Date
+    fechaDevolucionEsperada?: string | number | Date
+    fechaDevolucion?: string | number | Date
+    fechaDevolucionReal?: string | number | Date | null
     estado?: EstadoPrestamo
-    createdAt?: string | Date
+    createdAt?: string | number | Date
   }>
 }
 
-const toDate = (value: string | Date | null | undefined) =>
+const toDate = (value: string | number | Date | null | undefined) =>
   value === undefined || value === null ? undefined : new Date(value)
 
 interface SyncHerramienta {
@@ -96,6 +97,64 @@ router.post('/herramientas', async (req, res) => {
   )
 
   res.json({ herramientas: herramientas.length })
+})
+
+interface SyncPrestamo {
+  id: string
+  herramientaId: string
+  usuarioId: string
+  proyectoId?: string | null
+  fechaSalida?: string | number | Date
+  fechaDevolucionEsperada?: string | number | Date
+  fechaDevolucion?: string | number | Date
+  fechaDevolucionReal?: string | number | Date | null
+  estado?: EstadoPrestamo
+  createdAt?: string | number | Date
+}
+
+router.post('/prestamos', async (req, res) => {
+  const payload = req.body as SyncPrestamo[]
+
+  if (!Array.isArray(payload)) {
+    res.status(400).json({ error: 'El body debe ser un array de préstamos' })
+    return
+  }
+
+  const prestamos = await prisma.$transaction(
+    payload.map((prestamo) =>
+      prisma.prestamo.upsert({
+        where: { id: prestamo.id },
+        update: {
+          herramientaId: prestamo.herramientaId,
+          usuarioId: prestamo.usuarioId,
+          proyectoId: prestamo.proyectoId ?? null,
+          fechaSalida: toDate(prestamo.fechaSalida) ?? new Date(),
+          fechaDevolucionEsperada:
+            toDate(prestamo.fechaDevolucion ?? prestamo.fechaDevolucionEsperada) ?? new Date(),
+          fechaDevolucionReal: toDate(prestamo.fechaDevolucionReal) ?? null,
+          estado: ESTADOS.includes(prestamo.estado ?? 'prestado')
+            ? prestamo.estado!
+            : 'prestado',
+        },
+        create: {
+          id: prestamo.id,
+          herramientaId: prestamo.herramientaId,
+          usuarioId: prestamo.usuarioId,
+          proyectoId: prestamo.proyectoId ?? null,
+          fechaSalida: toDate(prestamo.fechaSalida) ?? new Date(),
+          fechaDevolucionEsperada:
+            toDate(prestamo.fechaDevolucion ?? prestamo.fechaDevolucionEsperada) ?? new Date(),
+          fechaDevolucionReal: toDate(prestamo.fechaDevolucionReal) ?? null,
+          estado: ESTADOS.includes(prestamo.estado ?? 'prestado')
+            ? prestamo.estado!
+            : 'prestado',
+          createdAt: toDate(prestamo.createdAt) ?? new Date(),
+        },
+      }),
+    ),
+  )
+
+  res.json({ prestamos: prestamos.length })
 })
 
 router.post('/', async (req, res) => {
@@ -178,7 +237,8 @@ router.post('/', async (req, res) => {
           usuarioId: p.usuarioId,
           proyectoId: p.proyectoId ?? null,
           fechaSalida: toDate(p.fechaSalida) ?? new Date(),
-          fechaDevolucionEsperada: toDate(p.fechaDevolucionEsperada) ?? new Date(),
+          fechaDevolucionEsperada:
+            toDate(p.fechaDevolucion ?? p.fechaDevolucionEsperada) ?? new Date(),
           fechaDevolucionReal: toDate(p.fechaDevolucionReal) ?? null,
           estado: ESTADOS.includes(p.estado ?? 'prestado') ? p.estado! : 'prestado',
         },
@@ -188,7 +248,8 @@ router.post('/', async (req, res) => {
           usuarioId: p.usuarioId,
           proyectoId: p.proyectoId ?? null,
           fechaSalida: toDate(p.fechaSalida) ?? new Date(),
-          fechaDevolucionEsperada: toDate(p.fechaDevolucionEsperada) ?? new Date(),
+          fechaDevolucionEsperada:
+            toDate(p.fechaDevolucion ?? p.fechaDevolucionEsperada) ?? new Date(),
           fechaDevolucionReal: toDate(p.fechaDevolucionReal) ?? null,
           estado: ESTADOS.includes(p.estado ?? 'prestado') ? p.estado! : 'prestado',
           createdAt: toDate(p.createdAt) ?? new Date(),
