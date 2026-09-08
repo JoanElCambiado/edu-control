@@ -14,12 +14,11 @@ function NuevoPrestamo() {
   const [herramientaId, setHerramientaId] = useState('')
   const [fechaDevolucion, setFechaDevolucion] = useState('')
   const [error, setError] = useState('')
-  const [mensaje, setMensaje] = useState('')
 
   const herramientasDisponibles = useLiveQuery(async () => {
     const todas = await db.herramientas.toArray()
     return todas
-      .filter((herramienta) => herramienta.disponible)
+      .filter((herramienta) => herramienta.disponible && herramienta.cantidad > 0)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   }, [])
 
@@ -31,11 +30,14 @@ function NuevoPrestamo() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
-    setMensaje('')
 
     const herramienta = herramientasDisponibles?.find((h) => h.id === herramientaId)
     if (!herramienta) {
       setError('Selecciona una herramienta disponible')
+      return
+    }
+    if (herramienta.cantidad <= 0) {
+      setError('La herramienta seleccionada ya no tiene stock disponible')
       return
     }
 
@@ -57,17 +59,22 @@ function NuevoPrestamo() {
       id: uuidv4(),
       herramientaId: herramienta.id,
       usuarioId: usuario.id,
+      receptor: nombre,
       fechaSalida: marcaDeTiempo,
-      fechaDevolucionEsperada: new Date(fechaDevolucion).getTime(),
+      fechaDevolucion: new Date(fechaDevolucion).getTime(),
       estado: 'prestado',
       createdAt: marcaDeTiempo,
     }
 
     await db.prestamos.add(prestamo)
-    await db.herramientas.update(herramienta.id, { disponible: false, updatedAt: marcaDeTiempo })
+    await db.herramientas.update(herramienta.id, {
+      cantidad: herramienta.cantidad - 1,
+      disponible: herramienta.cantidad - 1 > 0,
+      updatedAt: marcaDeTiempo,
+    })
 
     console.log('Préstamo registrado:', prestamo)
-    setMensaje(`Préstamo registrado: ${herramienta.nombre} para ${nombre}`)
+    window.alert('Préstamo registrado correctamente')
     setNombreRecibe('')
     setHerramientaId('')
     setFechaDevolucion('')
@@ -175,7 +182,6 @@ function NuevoPrestamo() {
           </div>
 
           {error && <p className="prestamo-error">{error}</p>}
-          {mensaje && <p className="prestamo-success">{mensaje}</p>}
 
           <button
             className="prestamo-button"

@@ -36,9 +36,10 @@ export interface Prestamo {
   id: string
   herramientaId: string
   usuarioId: string
+  receptor: string
   proyectoId?: string
   fechaSalida: number
-  fechaDevolucionEsperada: number
+  fechaDevolucion: number
   fechaDevolucionReal?: number
   estado: EstadoPrestamo
   createdAt: number
