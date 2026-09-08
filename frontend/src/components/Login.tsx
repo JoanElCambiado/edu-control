@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { db } from '../database/db'
 import {
   cerrarSesion,
@@ -14,6 +15,7 @@ function Login() {
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState('')
   const [sesion, setSesion] = useState<SesionUsuario | null>(() => obtenerSesion())
+  const navigate = useNavigate()
 
   const usuarioInvalido = usuario.length > 0 && !validarUsuario(usuario)
 
@@ -39,6 +41,9 @@ function Login() {
     }
     guardarSesion(nuevaSesion)
     setSesion(nuevaSesion)
+    if (nuevaSesion.rol === 'ADMINISTRADOR') {
+      navigate('/dashboard')
+    }
   }
 
   const handleLogout = () => {

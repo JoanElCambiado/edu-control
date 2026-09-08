@@ -1,0 +1,88 @@
+.dashboard {
+  min-height: 100vh;
+  display: flex;
+}
+
+.dashboard-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--text);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 20px;
+}
+
+.dashboard-brand {
+  margin: 0;
+  font-size: 26px;
+}
+
+.dashboard-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.dashboard-nav-button {
+  padding: 16px;
+  font-size: 19px;
+  font-weight: 600;
+  text-align: left;
+  color: #ffffff;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.dashboard-nav-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-nav-button--active {
+  background: var(--primary);
+}
+
+.dashboard-nav-button--danger {
+  margin-top: auto;
+  color: #fecaca;
+}
+
+.dashboard-user {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+.dashboard-content {
+  flex: 1;
+  padding: 40px;
+}
+
+.dashboard-title {
+  margin: 0 0 12px;
+  font-size: 34px;
+  color: var(--text);
+}
+
+.dashboard-placeholder {
+  font-size: 20px;
+  color: var(--text-light);
+}
+
+@media (max-width: 720px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: 100%;
+  }
+
+  .dashboard-content {
+    padding: 24px;
+  }
+}
