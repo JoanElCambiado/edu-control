@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { db } from '../database/db'
 import {
   cerrarSesion,
@@ -6,6 +6,7 @@ import {
   obtenerSesion,
   type SesionUsuario,
 } from '../services/session'
+import { validarUsuario } from '../utils/validations'
 import './Login.css'
 
 function Login() {
@@ -13,6 +14,12 @@ function Login() {
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState('')
   const [sesion, setSesion] = useState<SesionUsuario | null>(() => obtenerSesion())
+
+  const usuarioInvalido = usuario.length > 0 && !validarUsuario(usuario)
+
+  const handleUsuarioChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUsuario(event.target.value.toLowerCase())
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -77,8 +84,13 @@ function Login() {
               autoFocus
               required
               value={usuario}
-              onChange={(e) => setUsuario(e.target.value)}
+              onChange={handleUsuarioChange}
             />
+            {usuarioInvalido && (
+              <p className="login-error">
+                Solo minúsculas, números, guiones (-) y guiones bajos (_)
+              </p>
+            )}
           </div>
 
           <div className="login-field">
@@ -99,7 +111,7 @@ function Login() {
 
           {error && <p className="login-error">{error}</p>}
 
-          <button className="login-button" type="submit">
+          <button className="login-button" type="submit" disabled={usuarioInvalido}>
             Entrar
           </button>
         </form>

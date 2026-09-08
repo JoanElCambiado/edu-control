@@ -87,6 +87,11 @@
   background: var(--primary-darker);
 }
 
+.login-button:disabled {
+  background: var(--border);
+  cursor: not-allowed;
+}
+
 .login-error {
   margin: 0;
   padding: 12px 16px;
