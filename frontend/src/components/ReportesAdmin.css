@@ -42,6 +42,22 @@
   color: var(--text-light);
 }
 
+.reportes-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style-position: inside;
+}
+
+.reportes-list--ordenada {
+  padding-left: 0;
+}
+
+.reportes-item {
+  font-size: 17px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
 @media (max-width: 720px) {
   .reportes {
     flex-direction: column;
