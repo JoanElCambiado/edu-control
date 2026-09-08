@@ -12,6 +12,7 @@ function NuevoPrestamo() {
   const navigate = useNavigate()
   const [nombreRecibe, setNombreRecibe] = useState('')
   const [herramientaId, setHerramientaId] = useState('')
+  const [proyectoId, setProyectoId] = useState('')
   const [fechaDevolucion, setFechaDevolucion] = useState('')
   const [error, setError] = useState('')
 
@@ -20,6 +21,11 @@ function NuevoPrestamo() {
     return todas
       .filter((herramienta) => herramienta.disponible && herramienta.cantidad > 0)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
+  }, [])
+
+  const proyectos = useLiveQuery(async () => {
+    const todos = await db.proyectos.toArray()
+    return todos.sort((a, b) => a.nombre.localeCompare(b.nombre))
   }, [])
 
   const esAdministrador = sesion?.rol === 'ADMINISTRADOR'
@@ -59,6 +65,7 @@ function NuevoPrestamo() {
       id: uuidv4(),
       herramientaId: herramienta.id,
       usuarioId: usuario.id,
+      proyectoId: proyectoId || undefined,
       receptor: nombre,
       fechaSalida: marcaDeTiempo,
       fechaDevolucion: new Date(fechaDevolucion).getTime(),
@@ -77,6 +84,7 @@ function NuevoPrestamo() {
     window.alert('Préstamo registrado correctamente')
     setNombreRecibe('')
     setHerramientaId('')
+    setProyectoId('')
     setFechaDevolucion('')
   }
 
@@ -161,6 +169,30 @@ function NuevoPrestamo() {
                 {herramientasDisponibles.map((herramienta) => (
                   <option key={herramienta.id} value={herramienta.id}>
                     {herramienta.nombre} - Disponibles: {herramienta.cantidad}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="prestamo-field">
+            <label className="prestamo-label" htmlFor="prestamo-proyecto">
+              Proyecto Educativo
+            </label>
+            {proyectos === undefined ? (
+              <p className="prestamo-placeholder">Cargando proyectos…</p>
+            ) : (
+              <select
+                className="prestamo-input"
+                id="prestamo-proyecto"
+                name="proyectoId"
+                value={proyectoId}
+                onChange={(e) => setProyectoId(e.target.value)}
+              >
+                <option value="">Sin proyecto</option>
+                {proyectos.map((proyecto) => (
+                  <option key={proyecto.id} value={proyecto.id}>
+                    {proyecto.nombre}
                   </option>
                 ))}
               </select>
