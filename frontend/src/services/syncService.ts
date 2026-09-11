@@ -34,8 +34,9 @@ export async function sincronizarUsuarios(): Promise<void> {
 }
 
 export async function sincronizarDatos(): Promise<void> {
-  const [herramientas, proyectos, prestamos] = await Promise.all([
+  const [herramientas, usuarios, proyectos, prestamos] = await Promise.all([
     db.herramientas.toArray(),
+    db.usuarios.toArray(),
     db.proyectos.toArray(),
     db.prestamos.toArray(),
   ])
@@ -47,19 +48,18 @@ export async function sincronizarDatos(): Promise<void> {
       body: JSON.stringify(body),
     })
 
-  const [resHerramientas, resPrestamos, resProyectos] = await Promise.all([
-    enviar('/herramientas', herramientas),
-    enviar('/prestamos', prestamos),
-    enviar('/', { proyectos }),
-  ])
+  const asegurarRespuestaExitoso = async (ruta: string, respuesta: Response) => {
+    if (!respuesta.ok) {
+      throw new Error(`Error al sincronizar ${ruta}: ${respuesta.status}`)
+    }
+  }
 
-  if (!resHerramientas.ok) {
-    throw new Error(`Error al sincronizar herramientas: ${resHerramientas.status}`)
-  }
-  if (!resPrestamos.ok) {
-    throw new Error(`Error al sincronizar préstamos: ${resPrestamos.status}`)
-  }
-  if (!resProyectos.ok) {
-    throw new Error(`Error al sincronizar proyectos: ${resProyectos.status}`)
-  }
+  const resHerramientas = await enviar('/herramientas', herramientas)
+  await asegurarRespuestaExitoso('herramientas', resHerramientas)
+
+  const resGeneral = await enviar('/', { usuarios, proyectos })
+  await asegurarRespuestaExitoso('usuarios y proyectos', resGeneral)
+
+  const resPrestamos = await enviar('/prestamos', prestamos)
+  await asegurarRespuestaExitoso('préstamos', resPrestamos)
 }
