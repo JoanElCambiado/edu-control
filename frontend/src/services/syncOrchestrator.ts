@@ -1,4 +1,4 @@
-import { contarPendientes, hayRed, sincronizarDatos } from './syncService'
+﻿import { contarPendientes, hayRed, sincronizarDatos } from './syncService'
 
 export type EstadoSync = 'inactivo' | 'sin-red' | 'sincronizando' | 'ok' | 'error'
 
@@ -50,7 +50,7 @@ function programar(ms: number): void {
   temporizador = setTimeout(() => void ejecutarCiclo(), ms)
 }
 
-export async function ejecutarCiclo(forzado = false): Promise<void> {
+export async function ejecutarCiclo(): Promise<void> {
   if (enEjecucion) return
   enEjecucion = true
 
@@ -65,14 +65,15 @@ export async function ejecutarCiclo(forzado = false): Promise<void> {
     }
 
     const pendientesPrevios = await contarPendientes()
-    if (pendientesPrevios === 0 && !forzado) {
-      fallosConsecutivos = 0
-      notificar({ estado: 'ok', pendientes: 0, mensaje: 'Todo sincronizado' })
-      return
-    }
 
-    notificar({ estado: 'sincronizando', pendientes: pendientesPrevios, mensaje: 'Enviando datos' })
+    notificar({
+      estado: 'sincronizando',
+      pendientes: pendientesPrevios,
+      mensaje: pendientesPrevios > 0 ? 'Enviando datos' : 'Actualizando catalogos',
+    })
 
+    // Siempre se ejecuta el ciclo completo (pull + push), incluso sin pendientes:
+    // el pull de usuarios es lo que habilita el login offline en un dispositivo nuevo.
     const resultado = await sincronizarDatos()
     fallosConsecutivos = 0
 
@@ -83,7 +84,9 @@ export async function ejecutarCiclo(forzado = false): Promise<void> {
       mensaje:
         resultado.rechazados > 0
           ? `${resultado.enviados} enviados, ${resultado.rechazados} con error`
-          : `${resultado.enviados} registros sincronizados`,
+          : pendientesPrevios === 0
+            ? 'Todo sincronizado'
+            : `${resultado.enviados} registros sincronizados`,
     })
   } catch (err) {
     fallosConsecutivos += 1
@@ -101,7 +104,7 @@ export async function ejecutarCiclo(forzado = false): Promise<void> {
 
 export function forzarSync(): Promise<void> {
   fallosConsecutivos = 0
-  return ejecutarCiclo(true)
+  return ejecutarCiclo()
 }
 
 /** Arranca la escucha de red + polling de respaldo. Devuelve el limpiador. */
@@ -113,7 +116,7 @@ export function iniciarOrquestador(): () => void {
     fallosConsecutivos = 0
     // Feedback inmediato antes de tocar IndexedDB o la red.
     notificar({ estado: 'sincronizando', mensaje: 'Conexion restaurada, enviando datos' })
-    void ejecutarCiclo(true)
+    void ejecutarCiclo()
   }
 
   const alDesconectar = () => {

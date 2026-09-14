@@ -189,8 +189,12 @@ export async function procesarCola(): Promise<ResultadoSync> {
   return total
 }
 
-/** Pull de usuarios. No sobrescribe filas locales con cambios sin enviar. */
-export async function sincronizarUsuarios(): Promise<void> {
+/**
+ * Pull de usuarios. Respeta los cambios locales sin enviar, pero SIEMPRE
+ * inserta los usuarios que no existen en local y rellena la contrasena
+ * faltante (necesaria para el login offline).
+ */
+export async function sincronizarUsuarios(): Promise<number> {
   if (!hayRed()) {
     throw new Error('Sin conexion')
   }
@@ -205,12 +209,11 @@ export async function sincronizarUsuarios(): Promise<void> {
     throw new Error('Respuesta invalida al sincronizar usuarios')
   }
 
+  let guardados = 0
+
   await db.transaction('rw', db.usuarios, async () => {
     for (const u of data) {
-      const local = await db.usuarios.get(u.id)
-      if (local && local.syncStatus !== 'enviado') continue // gana el cambio local
-
-      await db.usuarios.put({
+      const remoto: Usuario = {
         id: u.id,
         nombre: u.nombre,
         rol: u.rol,
@@ -219,9 +222,52 @@ export async function sincronizarUsuarios(): Promise<void> {
         updatedAt: new Date(u.updatedAt).getTime(),
         syncStatus: 'enviado',
         syncIntentos: 0,
-      })
+      }
+
+      const local = await db.usuarios.get(u.id)
+
+      if (!local) {
+        // Dispositivo nuevo: sin esto la tabla queda vacia y el login falla.
+        await db.usuarios.put(remoto)
+        guardados += 1
+        continue
+      }
+
+      if (local.syncStatus === 'enviado') {
+        await db.usuarios.put(remoto)
+        guardados += 1
+        continue
+      }
+
+      // Hay cambios locales sin enviar: se conserva el dato local,
+      // pero se rellena la credencial si falta para permitir el login.
+      if (!local.contrasena && u.contrasena) {
+        await db.usuarios.update(local.id, { contrasena: u.contrasena })
+        guardados += 1
+      }
     }
   })
+
+  return guardados
+}
+
+/**
+ * Garantiza que haya usuarios en Dexie antes de validar credenciales.
+ * Devuelve el total local tras el intento. No lanza si no hay red.
+ */
+export async function asegurarUsuariosLocales(forzar = false): Promise<number> {
+  const totalLocal = await db.usuarios.count()
+
+  if (totalLocal > 0 && !forzar) return totalLocal
+  if (!hayRed()) return totalLocal
+
+  try {
+    await sincronizarUsuarios()
+  } catch (err) {
+    console.error('No se pudo descargar el catalogo de usuarios:', err)
+  }
+
+  return db.usuarios.count()
 }
 
 /** Ciclo completo: pull del catalogo de usuarios + push de la cola. */
@@ -229,6 +275,9 @@ export async function sincronizarDatos(): Promise<ResultadoSync> {
   if (!hayRed()) {
     throw new Error('Sin conexion')
   }
-  await sincronizarUsuarios().catch(() => undefined) // el pull no debe bloquear el push
+  // El pull no debe bloquear el push de la cola local.
+  await sincronizarUsuarios().catch((err) => {
+    console.error('Pull de usuarios fallido:', err)
+  })
   return procesarCola()
 }

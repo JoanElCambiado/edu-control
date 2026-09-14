@@ -1,7 +1,9 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../database/db'
+import type { Usuario } from '../database/models'
 import { guardarSesion } from '../services/session'
+import { asegurarUsuariosLocales, hayRed } from '../services/syncService'
 import { validarUsuario } from '../utils/validations'
 import './Login.css'
 
@@ -9,33 +11,82 @@ function Login() {
   const [usuario, setUsuario] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState('')
+  const [cargando, setCargando] = useState(false)
   const navigate = useNavigate()
 
   const usuarioInvalido = usuario.length > 0 && !validarUsuario(usuario)
 
+  // Descarga el catálogo de usuarios en cuanto se abre la pantalla de login,
+  // para que las credenciales existan en Dexie antes del primer intento.
+  useEffect(() => {
+    let activo = true
+    void asegurarUsuariosLocales().then((total) => {
+      if (activo && total === 0 && !hayRed()) {
+        setError('No hay usuarios guardados en este dispositivo. Conéctese una vez para descargarlos.')
+      }
+    })
+    return () => {
+      activo = false
+    }
+  }, [])
+
   const handleUsuarioChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setUsuario(event.target.value.toLowerCase())
+    setUsuario(event.target.value)
+    if (error) setError('')
   }
+
+  /** Búsqueda local insensible a mayúsculas/minúsculas. */
+  const buscarUsuario = (nombre: string) =>
+    db.usuarios.where('nombre').equalsIgnoreCase(nombre).first() as Promise<Usuario | undefined>
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
+    setCargando(true)
 
-    const encontrado = await db.usuarios.where('nombre').equals(usuario.trim()).first()
+    try {
+      const nombre = usuario.trim()
 
-    if (!encontrado || encontrado.contrasena !== contrasena) {
-      setError('Credenciales incorrectas')
-      return
-    }
+      // Si la tabla está vacía y hay red, se descarga antes de validar.
+      await asegurarUsuariosLocales()
 
-    guardarSesion({ id: encontrado.id, nombre: encontrado.nombre, rol: encontrado.rol })
+      let encontrado = await buscarUsuario(nombre)
 
-    if (encontrado.rol === 'ADMINISTRADOR') {
-      navigate('/dashboard')
-    } else if (encontrado.rol === 'RECEPCION') {
-      navigate('/nuevo-prestamo')
-    } else {
-      navigate('/usuario')
+      // Usuario desconocido en local: puede ser nuevo en la nube. Se reintenta una vez.
+      if (!encontrado && hayRed()) {
+        await asegurarUsuariosLocales(true)
+        encontrado = await buscarUsuario(nombre)
+      }
+
+      if (!encontrado) {
+        const total = await db.usuarios.count()
+        setError(
+          total === 0
+            ? 'No hay usuarios en este dispositivo. Conéctese a internet para descargarlos.'
+            : 'Credenciales incorrectas',
+        )
+        return
+      }
+
+      if (encontrado.contrasena !== contrasena) {
+        setError('Credenciales incorrectas')
+        return
+      }
+
+      guardarSesion({ id: encontrado.id, nombre: encontrado.nombre, rol: encontrado.rol })
+
+      if (encontrado.rol === 'ADMINISTRADOR') {
+        navigate('/dashboard')
+      } else if (encontrado.rol === 'RECEPCION') {
+        navigate('/nuevo-prestamo')
+      } else {
+        navigate('/usuario')
+      }
+    } catch (err) {
+      console.error('Error al iniciar sesión:', err)
+      setError('No se pudo validar el acceso. Intente de nuevo.')
+    } finally {
+      setCargando(false)
     }
   }
 
@@ -58,12 +109,13 @@ function Login() {
               autoComplete="username"
               autoFocus
               required
+              placeholder="Ej: Elena Torres"
               value={usuario}
               onChange={handleUsuarioChange}
             />
             {usuarioInvalido && (
               <p className="login-error">
-                Solo minúsculas, números, guiones (-) y guiones bajos (_)
+                Solo letras, números, espacios y los signos . - _
               </p>
             )}
           </div>
@@ -86,8 +138,8 @@ function Login() {
 
           {error && <p className="login-error">{error}</p>}
 
-          <button className="login-button" type="submit" disabled={usuarioInvalido}>
-            Entrar
+          <button className="login-button" type="submit" disabled={usuarioInvalido || cargando}>
+            {cargando ? 'Verificando…' : 'Entrar'}
           </button>
         </form>
       </section>
