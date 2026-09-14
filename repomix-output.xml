@@ -1,0 +1,3438 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+backend/
+  prisma/
+    migrations/
+      20260905015337_inicio/
+        migration.sql
+      20260905094258_add_contrasena/
+        migration.sql
+      20260908054222_add_categoria_estado_herramienta/
+        migration.sql
+      migration_lock.toml
+    schema.prisma
+    seed.ts
+  src/
+    lib/
+      prisma.ts
+    routes/
+      herramientas.ts
+      prestamos.ts
+      sync.ts
+      usuarios.ts
+    index.ts
+  .env.example
+  .gitignore
+  package.json
+  tsconfig.json
+frontend/
+  public/
+    favicon.svg
+    icons.svg
+    pwa-192x192.png
+    pwa-512x512-maskable.png
+    pwa-512x512.png
+  src/
+    components/
+      DashboardAdmin.css
+      DashboardAdmin.tsx
+      DashboardRecepcion.tsx
+      FormularioHerramienta.css
+      FormularioHerramienta.tsx
+      Login.css
+      Login.tsx
+      NuevoPrestamo.css
+      NuevoPrestamo.tsx
+      PanelUsuario.css
+      PanelUsuario.tsx
+      ReportesAdmin.css
+      ReportesAdmin.tsx
+    database/
+      db.ts
+      models.ts
+      uuid.ts
+    services/
+      session.ts
+      syncService.ts
+    utils/
+      validations.ts
+    App.tsx
+    index.css
+    main.tsx
+    vite-env.d.ts
+  .gitignore
+  .oxlintrc.json
+  index.html
+  package.json
+  README.md
+  tsconfig.app.json
+  tsconfig.json
+  tsconfig.node.json
+  vite.config.ts
+CONTEXTO.md
+prueba.txt
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="backend/prisma/migrations/20260905015337_inicio/migration.sql">
+-- CreateEnum
+CREATE TYPE "Rol" AS ENUM ('ADMINISTRADOR', 'RECEPCION', 'USUARIO');
+
+-- CreateEnum
+CREATE TYPE "EstadoPrestamo" AS ENUM ('prestado', 'devuelto', 'atrasado');
+
+-- CreateTable
+CREATE TABLE "usuarios" (
+    "id" UUID NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "rol" "Rol" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "usuarios_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "herramientas" (
+    "id" UUID NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "descripcion" TEXT,
+    "cantidad" INTEGER NOT NULL,
+    "disponible" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "herramientas_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "proyectos" (
+    "id" UUID NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "descripcion" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "proyectos_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "prestamos" (
+    "id" UUID NOT NULL,
+    "herramienta_id" UUID NOT NULL,
+    "usuario_id" UUID NOT NULL,
+    "proyecto_id" UUID,
+    "fecha_salida" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "fecha_devolucion_esperada" TIMESTAMP(3) NOT NULL,
+    "fecha_devolucion_real" TIMESTAMP(3),
+    "estado" "EstadoPrestamo" NOT NULL DEFAULT 'prestado',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "prestamos_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "prestamos_herramienta_id_idx" ON "prestamos"("herramienta_id");
+
+-- CreateIndex
+CREATE INDEX "prestamos_usuario_id_idx" ON "prestamos"("usuario_id");
+
+-- CreateIndex
+CREATE INDEX "prestamos_proyecto_id_idx" ON "prestamos"("proyecto_id");
+
+-- AddForeignKey
+ALTER TABLE "prestamos" ADD CONSTRAINT "prestamos_herramienta_id_fkey" FOREIGN KEY ("herramienta_id") REFERENCES "herramientas"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "prestamos" ADD CONSTRAINT "prestamos_usuario_id_fkey" FOREIGN KEY ("usuario_id") REFERENCES "usuarios"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "prestamos" ADD CONSTRAINT "prestamos_proyecto_id_fkey" FOREIGN KEY ("proyecto_id") REFERENCES "proyectos"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+</file>
+
+<file path="backend/prisma/migrations/20260905094258_add_contrasena/migration.sql">
+-- AlterTable
+ALTER TABLE "usuarios" ADD COLUMN     "contrasena" TEXT;
+</file>
+
+<file path="backend/prisma/migrations/20260908054222_add_categoria_estado_herramienta/migration.sql">
+-- AlterTable
+ALTER TABLE "herramientas" ADD COLUMN     "categoria" TEXT NOT NULL DEFAULT 'General',
+ADD COLUMN     "estado_fisico" TEXT NOT NULL DEFAULT 'bueno';
+</file>
+
+<file path="backend/prisma/migrations/migration_lock.toml">
+# Please do not edit this file manually
+# It should be added in your version-control system (e.g., Git)
+provider = "postgresql"
+</file>
+
+<file path="backend/.env.example">
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/edu_control?schema=public"
+PORT=4000
+</file>
+
+<file path="backend/.gitignore">
+node_modules
+dist
+.env
+*.log
+</file>
+
+<file path="backend/tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "types": ["node"]
+  },
+  "include": ["src"]
+}
+</file>
+
+<file path="frontend/public/favicon.svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" fill="none" viewBox="0 0 48 46"><path fill="#863bff" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" style="fill:#863bff;fill:color(display-p3 .5252 .23 1);fill-opacity:1"/><mask id="a" width="48" height="46" x="0" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M25.842 44.938c-.664.844-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.183c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.498 0-3.579-1.842-3.579H1.133c-.92 0-1.456-1.04-.92-1.787L9.91.473c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.578 1.842 3.578h11.377c.943 0 1.473 1.088.89 1.832L25.843 44.94z" style="fill:#000;fill-opacity:1"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#ede6ff" rx="5.508" ry="14.704" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -4.47 31.516)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#ede6ff" rx="10.399" ry="29.851" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -39.328 7.883)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#7e14ff" rx="5.508" ry="30.487" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -25.913 -14.639)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -32.644 -3.334)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -34.34 30.47)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#ede6ff" rx="14.072" ry="22.078" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="rotate(93.35 24.506 48.493)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx=".387" cy="8.972" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(39.51 .387 8.972)"/></g><g filter="url(#k)"><ellipse cx="47.523" cy="-6.092" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 47.523 -6.092)"/></g><g filter="url(#l)"><ellipse cx="41.412" cy="6.333" fill="#47bfff" rx="5.971" ry="9.665" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 41.412 6.333)"/></g><g filter="url(#m)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#n)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#o)"><ellipse cx="35.651" cy="29.907" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 35.651 29.907)"/></g><g filter="url(#p)"><ellipse cx="38.418" cy="32.4" fill="#47bfff" rx="5.971" ry="15.297" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 38.418 32.4)"/></g></g><defs><filter id="b" width="60.045" height="41.654" x="-19.77" y="16.149" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-54.613" y="-7.533" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-49.64" y="2.03" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-45.045" y="20.029" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-43.513" y="21.178" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="15.756" y="-17.901" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-27.636" y="-22.853" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="20.116" y="-38.415" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="24.641" y="-11.323" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="8.244" y="-2.416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="18.713" y="10.588" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter></defs></svg>
+</file>
+
+<file path="frontend/public/icons.svg">
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="bluesky-icon" viewBox="0 0 16 17">
+    <g clip-path="url(#bluesky-clip)"><path fill="#08060d" d="M7.75 7.735c-.693-1.348-2.58-3.86-4.334-5.097-1.68-1.187-2.32-.981-2.74-.79C.188 2.065.1 2.812.1 3.251s.241 3.602.398 4.13c.52 1.744 2.367 2.333 4.07 2.145-2.495.37-4.71 1.278-1.805 4.512 3.196 3.309 4.38-.71 4.987-2.746.608 2.036 1.307 5.91 4.93 2.746 2.72-2.746.747-4.143-1.747-4.512 1.702.189 3.55-.4 4.07-2.145.156-.528.397-3.691.397-4.13s-.088-1.186-.575-1.406c-.42-.19-1.06-.395-2.741.79-1.755 1.24-3.64 3.752-4.334 5.099"/></g>
+    <defs><clipPath id="bluesky-clip"><path fill="#fff" d="M.1.85h15.3v15.3H.1z"/></clipPath></defs>
+  </symbol>
+  <symbol id="discord-icon" viewBox="0 0 20 19">
+    <path fill="#08060d" d="M16.224 3.768a14.5 14.5 0 0 0-3.67-1.153c-.158.286-.343.67-.47.976a13.5 13.5 0 0 0-4.067 0c-.128-.306-.317-.69-.476-.976A14.4 14.4 0 0 0 3.868 3.77C1.546 7.28.916 10.703 1.231 14.077a14.7 14.7 0 0 0 4.5 2.306q.545-.748.965-1.587a9.5 9.5 0 0 1-1.518-.74q.191-.14.372-.293c2.927 1.369 6.107 1.369 8.999 0q.183.152.372.294-.723.437-1.52.74.418.838.963 1.588a14.6 14.6 0 0 0 4.504-2.308c.37-3.911-.63-7.302-2.644-10.309m-9.13 8.234c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.894 0 1.614.82 1.599 1.82.001 1-.705 1.82-1.6 1.82m5.91 0c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.893 0 1.614.82 1.599 1.82 0 1-.706 1.82-1.6 1.82"/>
+  </symbol>
+  <symbol id="documentation-icon" viewBox="0 0 21 20">
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="m15.5 13.333 1.533 1.322c.645.555.967.833.967 1.178s-.322.623-.967 1.179L15.5 18.333m-3.333-5-1.534 1.322c-.644.555-.966.833-.966 1.178s.322.623.966 1.179l1.534 1.321"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M17.167 10.836v-4.32c0-1.41 0-2.117-.224-2.68-.359-.906-1.118-1.621-2.08-1.96-.599-.21-1.349-.21-2.848-.21-2.623 0-3.935 0-4.983.369-1.684.591-3.013 1.842-3.641 3.428C3 6.449 3 7.684 3 10.154v2.122c0 2.558 0 3.838.706 4.726q.306.383.713.671c.76.536 1.79.64 3.581.66"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M3 10a2.78 2.78 0 0 1 2.778-2.778c.555 0 1.209.097 1.748-.047.48-.129.854-.503.982-.982.145-.54.048-1.194.048-1.749a2.78 2.78 0 0 1 2.777-2.777"/>
+  </symbol>
+  <symbol id="github-icon" viewBox="0 0 19 19">
+    <path fill="#08060d" fill-rule="evenodd" d="M9.356 1.85C5.05 1.85 1.57 5.356 1.57 9.694a7.84 7.84 0 0 0 5.324 7.44c.387.079.528-.168.528-.376 0-.182-.013-.805-.013-1.454-2.165.467-2.616-.935-2.616-.935-.349-.91-.864-1.143-.864-1.143-.71-.48.051-.48.051-.48.787.051 1.2.805 1.2.805.695 1.194 1.817.857 2.268.649.064-.507.27-.857.49-1.052-1.728-.182-3.545-.857-3.545-3.87 0-.857.31-1.558.8-2.104-.078-.195-.349-1 .077-2.078 0 0 .657-.208 2.14.805a7.5 7.5 0 0 1 1.946-.26c.657 0 1.328.092 1.946.26 1.483-1.013 2.14-.805 2.14-.805.426 1.078.155 1.883.078 2.078.502.546.799 1.247.799 2.104 0 3.013-1.818 3.675-3.558 3.87.284.247.528.714.528 1.454 0 1.052-.012 1.896-.012 2.156 0 .208.142.455.528.377a7.84 7.84 0 0 0 5.324-7.441c.013-4.338-3.48-7.844-7.773-7.844" clip-rule="evenodd"/>
+  </symbol>
+  <symbol id="social-icon" viewBox="0 0 20 20">
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M12.5 6.667a4.167 4.167 0 1 0-8.334 0 4.167 4.167 0 0 0 8.334 0"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M2.5 16.667a5.833 5.833 0 0 1 8.75-5.053m3.837.474.513 1.035c.07.144.257.282.414.309l.93.155c.596.1.736.536.307.965l-.723.73a.64.64 0 0 0-.152.531l.207.903c.164.715-.213.991-.84.618l-.872-.52a.63.63 0 0 0-.577 0l-.872.52c-.624.373-1.003.094-.84-.618l.207-.903a.64.64 0 0 0-.152-.532l-.723-.729c-.426-.43-.289-.864.306-.964l.93-.156a.64.64 0 0 0 .412-.31l.513-1.034c.28-.562.735-.562 1.012 0"/>
+  </symbol>
+  <symbol id="x-icon" viewBox="0 0 19 19">
+    <path fill="#08060d" fill-rule="evenodd" d="M1.893 1.98c.052.072 1.245 1.769 2.653 3.77l2.892 4.114c.183.261.333.48.333.486s-.068.089-.152.183l-.522.593-.765.867-3.597 4.087c-.375.426-.734.834-.798.905a1 1 0 0 0-.118.148c0 .01.236.017.664.017h.663l.729-.83c.4-.457.796-.906.879-.999a692 692 0 0 0 1.794-2.038c.034-.037.301-.34.594-.675l.551-.624.345-.392a7 7 0 0 1 .34-.374c.006 0 .93 1.306 2.052 2.903l2.084 2.965.045.063h2.275c1.87 0 2.273-.003 2.266-.021-.008-.02-1.098-1.572-3.894-5.547-2.013-2.862-2.28-3.246-2.273-3.266.008-.019.282-.332 2.085-2.38l2-2.274 1.567-1.782c.022-.028-.016-.03-.65-.03h-.674l-.3.342a871 871 0 0 1-1.782 2.025c-.067.075-.405.458-.75.852a100 100 0 0 1-.803.91c-.148.172-.299.344-.99 1.127-.304.343-.32.358-.345.327-.015-.019-.904-1.282-1.976-2.808L6.365 1.85H1.8zm1.782.91 8.078 11.294c.772 1.08 1.413 1.973 1.425 1.984.016.017.241.02 1.05.017l1.03-.004-2.694-3.766L7.796 5.75 5.722 2.852l-1.039-.004-1.039-.004z" clip-rule="evenodd"/>
+  </symbol>
+</svg>
+</file>
+
+<file path="frontend/.gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+</file>
+
+<file path="frontend/.oxlintrc.json">
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  }
+}
+</file>
+
+<file path="frontend/README.md">
+# React + TypeScript + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the Oxlint configuration
+
+If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+
+```json
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  }
+}
+```
+
+See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+</file>
+
+<file path="frontend/tsconfig.app.json">
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "types": ["vite/client"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"]
+}
+</file>
+
+<file path="frontend/tsconfig.json">
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
+</file>
+
+<file path="frontend/tsconfig.node.json">
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "module": "nodenext",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["vite.config.ts"]
+}
+</file>
+
+<file path="CONTEXTO.md">
+# Contexto del Proyecto: Edu Control
+
+## 1. Arquitectura General
+- **Tipo de Aplicación:** Web PWA Offline-First.
+- **Enfoque:** 100% operativa sin conexión a internet.
+- **Estrategia de Datos:** 
+  - Las lecturas y escrituras (préstamos, catálogo) ocurren en IndexedDB (local) primero.
+  - Al detectar red, los datos encolados se envían en ráfagas al Backend.
+
+## 2. Stack Tecnológico
+- **Frontend:** React + Vite + TypeScript
+- **Offline / PWA:** Service Workers (`vite-plugin-pwa`)
+- **Persistencia Local:** Dexie.js (Wrapper de IndexedDB)
+- **Backend API:** Node.js + Express + TypeScript
+- **ORM & BD Nube:** Prisma + PostgreSQL
+- **Identificadores:** Todos los modelos deben usar `UUID v4` como Clave Primaria (PK) para evitar colisiones en la nube.
+
+## 3. Reglas de Desarrollo
+1. Todo componente UI debe ser simple e intuitivo (diseñado para usuarios con baja alfabetización digital).
+2. Nunca asumas que hay conexión a internet disponible en las llamadas del Frontend.
+3. Toda transacción local (creación de préstamo o usuario) debe generar su UUID antes de guardar en IndexedDB.
+</file>
+
+<file path="backend/prisma/seed.ts">
+import { PrismaClient } from '@prisma/client'
+import type { Rol } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+interface SeedUsuario {
+  id: string
+  nombre: string
+  rol: Rol
+  contrasena: string
+}
+
+const usuarios: SeedUsuario[] = [
+  {
+    id: '10000000-0000-4000-8000-000000000001',
+    nombre: 'Elena Torres',
+    rol: 'ADMINISTRADOR',
+    contrasena: '1234',
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000002',
+    nombre: 'Carlos Méndez',
+    rol: 'RECEPCION',
+    contrasena: '1234',
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000003',
+    nombre: 'Luis Pérez',
+    rol: 'USUARIO',
+    contrasena: '1234',
+  },
+]
+
+async function main() {
+  for (const u of usuarios) {
+    await prisma.usuario.upsert({
+      where: { id: u.id },
+      update: { nombre: u.nombre, rol: u.rol, contrasena: u.contrasena },
+      create: { id: u.id, nombre: u.nombre, rol: u.rol, contrasena: u.contrasena },
+    })
+  }
+
+  const total = await prisma.usuario.count()
+  console.log(`Seed completado: ${usuarios.length} usuarios (${usuarios.map((u) => u.rol).join(', ')}). Total en BD: ${total}`)
+}
+
+main()
+  .catch((err) => {
+    console.error('Error en el seed:', err)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
+</file>
+
+<file path="backend/src/lib/prisma.ts">
+import { PrismaClient } from '@prisma/client'
+
+export const prisma = new PrismaClient()
+</file>
+
+<file path="backend/src/routes/herramientas.ts">
+import { Router } from 'express'
+import { prisma } from '../lib/prisma.js'
+
+const router = Router()
+
+router.get('/', async (_req, res) => {
+  const herramientas = await prisma.herramienta.findMany({
+    include: { _count: { select: { prestamos: true } } },
+  })
+  res.json(herramientas)
+})
+
+router.get('/:id', async (req, res) => {
+  const herramienta = await prisma.herramienta.findUnique({
+    where: { id: req.params.id },
+    include: { prestamos: true },
+  })
+  if (!herramienta) {
+    res.status(404).json({ error: 'Herramienta no encontrada' })
+    return
+  }
+  res.json(herramienta)
+})
+
+router.post('/', async (req, res) => {
+  const { nombre, descripcion, cantidad, disponible } = req.body
+  if (typeof nombre !== 'string') {
+    res.status(400).json({ error: 'nombre es obligatorio' })
+    return
+  }
+  const herramienta = await prisma.herramienta.create({
+    data: {
+      nombre,
+      descripcion,
+      cantidad: typeof cantidad === 'number' ? cantidad : 1,
+      disponible: typeof disponible === 'boolean' ? disponible : true,
+    },
+  })
+  res.status(201).json(herramienta)
+})
+
+router.put('/:id', async (req, res) => {
+  const { nombre, descripcion, cantidad, disponible } = req.body
+  const herramienta = await prisma.herramienta.update({
+    where: { id: req.params.id },
+    data: {
+      ...(nombre && { nombre }),
+      ...(descripcion !== undefined && { descripcion }),
+      ...(typeof cantidad === 'number' && { cantidad }),
+      ...(typeof disponible === 'boolean' && { disponible }),
+    },
+  })
+  res.json(herramienta)
+})
+
+router.delete('/:id', async (req, res) => {
+  await prisma.herramienta.delete({ where: { id: req.params.id } })
+  res.status(204).end()
+})
+
+export default router
+</file>
+
+<file path="backend/src/routes/prestamos.ts">
+import { Router } from 'express'
+import { prisma } from '../lib/prisma.js'
+
+const router = Router()
+
+router.get('/', async (_req, res) => {
+  const prestamos = await prisma.prestamo.findMany({
+    include: { herramienta: true, usuario: true, proyecto: true },
+    orderBy: { fechaSalida: 'desc' },
+  })
+  res.json(prestamos)
+})
+
+router.get('/:id', async (req, res) => {
+  const prestamo = await prisma.prestamo.findUnique({
+    where: { id: req.params.id },
+    include: { herramienta: true, usuario: true, proyecto: true },
+  })
+  if (!prestamo) {
+    res.status(404).json({ error: 'Préstamo no encontrado' })
+    return
+  }
+  res.json(prestamo)
+})
+
+router.post('/', async (req, res) => {
+  const { herramientaId, usuarioId, proyectoId, fechaSalida, fechaDevolucionEsperada, estado } = req.body
+  if (typeof herramientaId !== 'string' || typeof usuarioId !== 'string') {
+    res.status(400).json({ error: 'herramientaId y usuarioId son obligatorios' })
+    return
+  }
+  if (!fechaDevolucionEsperada) {
+    res.status(400).json({ error: 'fechaDevolucionEsperada es obligatoria' })
+    return
+  }
+  const prestamo = await prisma.prestamo.create({
+    data: {
+      herramientaId,
+      usuarioId,
+      proyectoId: typeof proyectoId === 'string' ? proyectoId : null,
+      fechaSalida: fechaSalida ? new Date(fechaSalida) : new Date(),
+      fechaDevolucionEsperada: new Date(fechaDevolucionEsperada),
+      estado,
+    },
+    include: { herramienta: true, usuario: true, proyecto: true },
+  })
+  res.status(201).json(prestamo)
+})
+
+router.put('/:id', async (req, res) => {
+  const { proyectoId, fechaSalida, fechaDevolucionEsperada, fechaDevolucionReal, estado } = req.body
+  const prestamo = await prisma.prestamo.update({
+    where: { id: req.params.id },
+    data: {
+      ...(proyectoId !== undefined && { proyectoId }),
+      ...(fechaSalida && { fechaSalida: new Date(fechaSalida) }),
+      ...(fechaDevolucionEsperada && { fechaDevolucionEsperada: new Date(fechaDevolucionEsperada) }),
+      ...(fechaDevolucionReal !== undefined && {
+        fechaDevolucionReal: fechaDevolucionReal ? new Date(fechaDevolucionReal) : null,
+      }),
+      ...(estado && { estado }),
+    },
+    include: { herramienta: true, usuario: true, proyecto: true },
+  })
+  res.json(prestamo)
+})
+
+router.delete('/:id', async (req, res) => {
+  await prisma.prestamo.delete({ where: { id: req.params.id } })
+  res.status(204).end()
+})
+
+export default router
+</file>
+
+<file path="backend/src/routes/usuarios.ts">
+import { Router } from 'express'
+import { prisma } from '../lib/prisma.js'
+import type { Rol } from '@prisma/client'
+
+const ROLES: Rol[] = ['ADMINISTRADOR', 'RECEPCION', 'USUARIO']
+const router = Router()
+
+const isRol = (value: unknown): value is Rol => typeof value === 'string' && ROLES.includes(value as Rol)
+
+router.get('/', async (_req, res) => {
+  const usuarios = await prisma.usuario.findMany({
+    include: { _count: { select: { prestamos: true } } },
+  })
+  res.json(usuarios)
+})
+
+router.get('/:id', async (req, res) => {
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: req.params.id },
+    include: { prestamos: true },
+  })
+  if (!usuario) {
+    res.status(404).json({ error: 'Usuario no encontrado' })
+    return
+  }
+  res.json(usuario)
+})
+
+router.post('/', async (req, res) => {
+  const { nombre, rol } = req.body
+  if (typeof nombre !== 'string' || !isRol(rol)) {
+    res.status(400).json({ error: 'nombre y rol (ADMINISTRADOR | RECEPCION | USUARIO) son obligatorios' })
+    return
+  }
+  const usuario = await prisma.usuario.create({ data: { nombre, rol } })
+  res.status(201).json(usuario)
+})
+
+router.put('/:id', async (req, res) => {
+  const { nombre, rol } = req.body
+  const usuario = await prisma.usuario.update({
+    where: { id: req.params.id },
+    data: {
+      ...(typeof nombre === 'string' && { nombre }),
+      ...(isRol(rol) && { rol }),
+    },
+  })
+  res.json(usuario)
+})
+
+router.delete('/:id', async (req, res) => {
+  await prisma.usuario.delete({ where: { id: req.params.id } })
+  res.status(204).end()
+})
+
+export default router
+</file>
+
+<file path="frontend/src/components/PanelUsuario.css">
+.usuario {
+  min-height: 100vh;
+  display: flex;
+}
+
+.usuario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.usuario-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.usuario-card-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  color: var(--text);
+}
+
+.usuario-card-meta {
+  margin: 0;
+  font-size: 17px;
+  color: var(--text-light);
+}
+
+.usuario-card-stock {
+  margin: 10px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.usuario-historial-titulo {
+  margin-top: 40px;
+}
+
+.usuario-tabla {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.usuario-tabla th,
+.usuario-tabla td {
+  padding: 14px 16px;
+  font-size: 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.usuario-tabla th {
+  background: var(--text);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.usuario-tabla tr:last-child td {
+  border-bottom: none;
+}
+
+.usuario-estado {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.usuario-estado--prestado {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.usuario-estado--devuelto {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.usuario-estado--atrasado {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.usuario-placeholder {
+  font-size: 18px;
+  color: var(--text-light);
+}
+
+@media (max-width: 720px) {
+  .usuario {
+    flex-direction: column;
+  }
+
+  .usuario-tabla th,
+  .usuario-tabla td {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+}
+</file>
+
+<file path="frontend/src/components/PanelUsuario.tsx">
+import { Navigate, useNavigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../database/db'
+import type { EstadoPrestamo } from '../database/models'
+import { cerrarSesion, obtenerSesion } from '../services/session'
+import './PanelUsuario.css'
+import './DashboardAdmin.css'
+
+const ETIQUETA_ESTADO: Record<EstadoPrestamo, string> = {
+  prestado: 'Prestado',
+  devuelto: 'Devuelto',
+  atrasado: 'Atrasado',
+}
+
+function formatearFecha(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString('es-MX', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+type FilaHistorial = {
+  id: string
+  nombreHerramienta: string
+  fechaSalida: number
+  estado: EstadoPrestamo
+}
+
+function PanelUsuario() {
+  const sesion = obtenerSesion()
+  const navigate = useNavigate()
+  const sesionId = sesion?.id
+
+  const herramientasDisponibles = useLiveQuery(async () => {
+    const todas = await db.herramientas.toArray()
+    return todas
+      .filter((herramienta) => herramienta.disponible && herramienta.cantidad > 0)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+  }, [])
+
+  const historial = useLiveQuery(async (): Promise<FilaHistorial[]> => {
+    if (!sesionId) return []
+    const prestamos = await db.prestamos.where('usuarioId').equals(sesionId).toArray()
+    const herramientas = await db.herramientas.toArray()
+    const nombres = new Map(herramientas.map((herramienta) => [herramienta.id, herramienta.nombre]))
+    return prestamos
+      .sort((a, b) => b.fechaSalida - a.fechaSalida)
+      .map((prestamo) => ({
+        id: prestamo.id,
+        nombreHerramienta: nombres.get(prestamo.herramientaId) ?? 'Herramienta no encontrada',
+        fechaSalida: prestamo.fechaSalida,
+        estado: prestamo.estado,
+      }))
+  }, [sesionId])
+
+  if (!sesion || sesion.rol !== 'USUARIO') {
+    return <Navigate to="/login" replace />
+  }
+
+  const handleCerrarSesion = () => {
+    const acepta = window.confirm('¿Desea cerrar sesión?')
+    if (!acepta) return
+    cerrarSesion()
+    navigate('/')
+  }
+
+  return (
+    <div className="usuario">
+      <aside className="dashboard-sidebar">
+        <h1 className="dashboard-brand">Edu Control</h1>
+        <nav className="dashboard-nav">
+          <button
+            className="dashboard-nav-button dashboard-nav-button--danger"
+            type="button"
+            onClick={handleCerrarSesion}
+          >
+            Cerrar Sesión
+          </button>
+        </nav>
+        <p className="dashboard-user">
+          {sesion.nombre} · {sesion.rol}
+        </p>
+      </aside>
+
+      <main className="dashboard-content">
+        <h2 className="dashboard-title">Herramientas Disponibles</h2>
+        {herramientasDisponibles === undefined ? (
+          <p className="usuario-placeholder">Cargando inventario…</p>
+        ) : herramientasDisponibles.length === 0 ? (
+          <p className="usuario-placeholder">No hay herramientas disponibles en este momento.</p>
+        ) : (
+          <div className="usuario-grid">
+            {herramientasDisponibles.map((herramienta) => (
+              <article className="usuario-card" key={herramienta.id}>
+                <h3 className="usuario-card-title">{herramienta.nombre}</h3>
+                <p className="usuario-card-meta">{herramienta.categoria}</p>
+                <p className="usuario-card-stock">Disponibles: {herramienta.cantidad}</p>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <h2 className="dashboard-title usuario-historial-titulo">Mi Historial</h2>
+        {historial === undefined ? (
+          <p className="usuario-placeholder">Cargando historial…</p>
+        ) : historial.length === 0 ? (
+          <p className="usuario-placeholder">Todavía no tienes préstamos registrados.</p>
+        ) : (
+          <table className="usuario-tabla">
+            <thead>
+              <tr>
+                <th>Herramienta</th>
+                <th>Fecha de entrega</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {historial.map((registro) => (
+                <tr key={registro.id}>
+                  <td>{registro.nombreHerramienta}</td>
+                  <td>{formatearFecha(registro.fechaSalida)}</td>
+                  <td>
+                    <span className={`usuario-estado usuario-estado--${registro.estado}`}>
+                      {ETIQUETA_ESTADO[registro.estado]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </main>
+    </div>
+  )
+}
+
+export default PanelUsuario
+</file>
+
+<file path="frontend/src/database/uuid.ts">
+export function uuidv4(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+</file>
+
+<file path="frontend/src/services/session.ts">
+import type { Rol } from '../database/models'
+
+export interface SesionUsuario {
+  id: string
+  nombre: string
+  rol: Rol
+}
+
+const SESSION_KEY = 'edu-control-session'
+
+export function guardarSesion(usuario: SesionUsuario) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(usuario))
+}
+
+export function obtenerSesion(): SesionUsuario | null {
+  const raw = localStorage.getItem(SESSION_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as SesionUsuario
+  } catch {
+    return null
+  }
+}
+
+export function cerrarSesion() {
+  localStorage.removeItem(SESSION_KEY)
+}
+</file>
+
+<file path="frontend/src/utils/validations.ts">
+const USUARIO_REGEX = /^[a-z0-9_-]+$/
+
+export function validarUsuario(valor: string): boolean {
+  if (valor.length === 0) return false
+  return USUARIO_REGEX.test(valor)
+}
+</file>
+
+<file path="frontend/src/index.css">
+:root {
+  --primary: #4169e1;
+  --primary-dark: #3553c4;
+  --primary-darker: #2b44a4;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --bg: #f3f5f9;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --border: #d1d5db;
+  --focus-ring: rgba(65, 105, 225, 0.35);
+  --error: #dc2626;
+  --success: #16a34a;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  color-scheme: light;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+#root {
+  min-height: 100vh;
+}
+</file>
+
+<file path="frontend/src/main.tsx">
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { registerSW } from 'virtual:pwa-register'
+import './index.css'
+import App from './App.tsx'
+
+registerSW({ immediate: true })
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+</file>
+
+<file path="frontend/src/vite-env.d.ts">
+/// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/client" />
+</file>
+
+<file path="frontend/index.html">
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <meta name="theme-color" content="#4169e1" />
+    <title>Edu Control</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="frontend/vite.config.ts">
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
+      manifest: {
+        name: 'Edu Control',
+        short_name: 'EduControl',
+        description: 'Sistema de préstamos offline-first para instituciones educativas.',
+        lang: 'es',
+        display: 'standalone',
+        start_url: '/',
+        theme_color: '#4169e1',
+        background_color: '#ffffff',
+        icons: [
+          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/pwa-512x512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: '/index.html',
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\..*$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24,
+              },
+            },
+          },
+        ],
+      },
+    }),
+  ],
+})
+</file>
+
+<file path="prueba.txt">
+hola
+</file>
+
+<file path="backend/prisma/schema.prisma">
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMINISTRADOR
+  RECEPCION
+  USUARIO
+}
+
+enum EstadoPrestamo {
+  prestado
+  devuelto
+  atrasado
+}
+
+/// Usuario que solicita herramientas en préstamo.
+model Usuario {
+  id         String       @id @default(uuid()) @db.Uuid
+  nombre     String
+  rol        Rol
+  contrasena String?
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  prestamos  Prestamo[]
+
+  @@map("usuarios")
+}
+
+/// Herramienta del catálogo disponible para préstamo.
+model Herramienta {
+  id           String     @id @default(uuid()) @db.Uuid
+  nombre       String
+  categoria    String     @default("General")
+  estadoFisico String     @default("bueno") @map("estado_fisico")
+  descripcion  String?
+  cantidad     Int
+  disponible   Boolean    @default(true)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  prestamos    Prestamo[]
+
+  @@map("herramientas")
+}
+
+/// Proyecto al que se asocia un préstamo (opcional).
+model Proyecto {
+  id          String     @id @default(uuid()) @db.Uuid
+  nombre      String
+  descripcion String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  prestamos   Prestamo[]
+
+  @@map("proyectos")
+}
+
+/// Préstamo de una herramienta a un usuario, opcionalmente ligado a un proyecto.
+model Prestamo {
+  id                      String          @id @default(uuid()) @db.Uuid
+  herramientaId           String          @map("herramienta_id") @db.Uuid
+  usuarioId               String          @map("usuario_id") @db.Uuid
+  proyectoId              String?         @map("proyecto_id") @db.Uuid
+  fechaSalida             DateTime        @default(now()) @map("fecha_salida")
+  fechaDevolucionEsperada DateTime        @map("fecha_devolucion_esperada")
+  fechaDevolucionReal     DateTime?       @map("fecha_devolucion_real")
+  estado                  EstadoPrestamo  @default(prestado)
+  createdAt               DateTime        @default(now()) @map("created_at")
+  herramienta             Herramienta     @relation(fields: [herramientaId], references: [id])
+  usuario                 Usuario         @relation(fields: [usuarioId], references: [id])
+  proyecto                Proyecto?       @relation(fields: [proyectoId], references: [id])
+
+  @@index([herramientaId])
+  @@index([usuarioId])
+  @@index([proyectoId])
+  @@map("prestamos")
+}
+</file>
+
+<file path="backend/src/index.ts">
+import 'dotenv/config'
+import express from 'express'
+import cors from 'cors'
+import { prisma } from './lib/prisma.js'
+import usuariosRouter from './routes/usuarios.js'
+import herramientasRouter from './routes/herramientas.js'
+import prestamosRouter from './routes/prestamos.js'
+import syncRouter from './routes/sync.js'
+
+const app = express()
+
+app.use(cors())
+app.use(express.json())
+
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok' })
+})
+
+app.get('/api/sync/usuarios', async (_req, res) => {
+  const usuarios = await prisma.usuario.findMany({
+    orderBy: { createdAt: 'asc' },
+    include: { _count: { select: { prestamos: true } } },
+  })
+  res.json(usuarios)
+})
+
+app.use('/api/usuarios', usuariosRouter)
+app.use('/api/herramientas', herramientasRouter)
+app.use('/api/prestamos', prestamosRouter)
+app.use('/api/sync', syncRouter)
+
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada' })
+})
+
+app.use(
+  (err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error(err)
+    res.status(500).json({ error: 'Error interno del servidor' })
+  },
+)
+
+const port = Number(process.env.PORT ?? 4000)
+
+async function main() {
+  app.listen(port, () => {
+    console.log(`API escuchando en http://localhost:${port}`)
+  })
+}
+
+main().catch(async (err) => {
+  console.error('No se pudo iniciar el servidor:', err)
+  await prisma.$disconnect()
+  process.exit(1)
+})
+
+async function shutdown() {
+  await prisma.$disconnect()
+  process.exit(0)
+}
+
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)
+</file>
+
+<file path="backend/package.json">
+{
+  "name": "backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "prisma:validate": "prisma validate",
+    "prisma:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.0",
+    "prisma": "^6.15.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "prisma@6.19.3": true
+  }
+}
+</file>
+
+<file path="frontend/src/components/DashboardAdmin.css">
+.dashboard {
+  min-height: 100vh;
+  display: flex;
+}
+
+.dashboard-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--text);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 20px;
+}
+
+.dashboard-brand {
+  margin: 0;
+  font-size: 26px;
+}
+
+.dashboard-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.dashboard-nav-button {
+  display: block;
+  padding: 16px;
+  font-size: 19px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  color: #ffffff;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.dashboard-nav-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-nav-button--active {
+  background: var(--primary);
+}
+
+.dashboard-nav-button--danger {
+  margin-top: auto;
+  color: #fecaca;
+}
+
+.dashboard-user {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+.dashboard-content {
+  flex: 1;
+  padding: 40px;
+}
+
+.dashboard-title {
+  margin: 0 0 12px;
+  font-size: 34px;
+  color: var(--text);
+}
+
+.dashboard-placeholder {
+  font-size: 20px;
+  color: var(--text-light);
+}
+
+@media (max-width: 720px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: 100%;
+  }
+
+  .dashboard-content {
+    padding: 24px;
+  }
+}
+</file>
+
+<file path="frontend/src/components/FormularioHerramienta.css">
+.herramienta-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 24px 0 32px;
+}
+
+.herramienta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.herramienta-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.herramienta-input {
+  font-size: 19px;
+  padding: 13px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.herramienta-input:focus {
+  outline: 3px solid var(--focus-ring);
+  border-color: var(--primary);
+}
+
+.herramienta-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+}
+
+.herramienta-actions .herramienta-button {
+  flex: 1;
+}
+
+.herramienta-button {
+  padding: 15px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--primary);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.herramienta-button:hover,
+.herramienta-button:focus-visible {
+  background: var(--primary-dark);
+}
+
+.herramienta-button--secondary {
+  background: var(--text-light);
+}
+
+.herramienta-button--secondary:hover,
+.herramienta-button--secondary:focus-visible {
+  background: var(--text);
+}
+
+.herramienta-success {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--success);
+  border-radius: 10px;
+}
+
+.herramienta-list-title {
+  margin: 8px 0 12px;
+  font-size: 22px;
+  color: var(--text);
+}
+
+.herramienta-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.herramienta-table th,
+.herramienta-table td {
+  padding: 12px 16px;
+  font-size: 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.herramienta-table th {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.herramienta-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.herramienta-empty {
+  font-size: 18px;
+  color: var(--text-light);
+}
+
+.herramienta-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.herramienta-btn-accion {
+  padding: 8px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.herramienta-btn-accion:hover,
+.herramienta-btn-accion:focus-visible {
+  background: var(--primary-dark);
+}
+
+.herramienta-btn-accion--danger {
+  background: var(--error);
+}
+
+.herramienta-btn-accion--danger:hover,
+.herramienta-btn-accion--danger:focus-visible {
+  background: #b91c1c;
+}
+
+@media (max-width: 720px) {
+  .herramienta-form {
+    grid-template-columns: 1fr;
+  }
+}
+</file>
+
+<file path="frontend/src/components/FormularioHerramienta.tsx">
+import { useState, type FormEvent } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../database/db'
+import { type EstadoFisico, type Herramienta } from '../database/models'
+import { uuidv4 } from '../database/uuid'
+import './FormularioHerramienta.css'
+
+const ESTADOS_FISICOS: Array<{ value: EstadoFisico; label: string }> = [
+  { value: 'excelente', label: 'Excelente' },
+  { value: 'bueno', label: 'Bueno' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'mantenimiento', label: 'Mantenimiento' },
+]
+
+const etiquetaEstado = (estado: EstadoFisico) =>
+  ESTADOS_FISICOS.find((e) => e.value === estado)?.label ?? estado
+
+function FormularioHerramienta() {
+  const [nombre, setNombre] = useState('')
+  const [categoria, setCategoria] = useState('')
+  const [estadoFisico, setEstadoFisico] = useState<EstadoFisico>('bueno')
+  const [cantidad, setCantidad] = useState(1)
+  const [mensaje, setMensaje] = useState('')
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [editandoCreatedAt, setEditandoCreatedAt] = useState<number | null>(null)
+
+  const herramientas = useLiveQuery(
+    () => db.herramientas.orderBy('nombre').toArray(),
+    [],
+  )
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setMensaje('')
+
+    const ahora = Date.now()
+    const datos: Herramienta = {
+      id: editandoId ?? uuidv4(),
+      nombre: nombre.trim(),
+      categoria: categoria.trim(),
+      estadoFisico,
+      cantidad,
+      disponible: true,
+      createdAt: editandoCreatedAt ?? ahora,
+      updatedAt: ahora,
+    }
+
+    if (editandoId) {
+      await db.herramientas.update(editandoId, datos)
+      setMensaje('Herramienta actualizada')
+    } else {
+      await db.herramientas.add(datos)
+      setMensaje('Herramienta guardada')
+    }
+
+    setEditandoId(null)
+    setEditandoCreatedAt(null)
+    setNombre('')
+    setCategoria('')
+    setEstadoFisico('bueno')
+    setCantidad(1)
+  }
+
+  const handleEditar = (herramienta: Herramienta) => {
+    setEditandoId(herramienta.id)
+    setEditandoCreatedAt(herramienta.createdAt)
+    setNombre(herramienta.nombre)
+    setCategoria(herramienta.categoria)
+    setEstadoFisico(herramienta.estadoFisico)
+    setCantidad(herramienta.cantidad)
+    setMensaje('')
+  }
+
+  const handleEditarCancelar = () => {
+    setEditandoId(null)
+    setEditandoCreatedAt(null)
+    setNombre('')
+    setCategoria('')
+    setEstadoFisico('bueno')
+    setCantidad(1)
+    setMensaje('')
+  }
+
+  const handleEliminar = async (herramienta: Herramienta) => {
+    const confirmado = window.confirm(`¿Eliminar "${herramienta.nombre}" del catálogo?`)
+    if (!confirmado) return
+    await db.herramientas.delete(herramienta.id)
+    setMensaje('Herramienta eliminada')
+  }
+
+  return (
+    <section className="herramienta">
+      <h2 className="dashboard-title">
+        {editandoId ? 'Editar Herramienta' : 'Catálogo de Herramientas'}
+      </h2>
+
+      <form className="herramienta-form" onSubmit={handleSubmit}>
+        <div className="herramienta-field">
+          <label className="herramienta-label" htmlFor="herramienta-nombre">
+            Nombre de la herramienta
+          </label>
+          <input
+            className="herramienta-input"
+            id="herramienta-nombre"
+            name="nombre"
+            type="text"
+            required
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+        </div>
+
+        <div className="herramienta-field">
+          <label className="herramienta-label" htmlFor="herramienta-categoria">
+            Categoría
+          </label>
+          <input
+            className="herramienta-input"
+            id="herramienta-categoria"
+            name="categoria"
+            type="text"
+            required
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value)}
+          />
+        </div>
+
+        <div className="herramienta-field">
+          <label className="herramienta-label" htmlFor="herramienta-estado">
+            Estado físico
+          </label>
+          <select
+            className="herramienta-input"
+            id="herramienta-estado"
+            name="estadoFisico"
+            value={estadoFisico}
+            onChange={(e) => setEstadoFisico(e.target.value as EstadoFisico)}
+          >
+            {ESTADOS_FISICOS.map((e) => (
+              <option key={e.value} value={e.value}>
+                {e.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="herramienta-field">
+          <label className="herramienta-label" htmlFor="herramienta-cantidad">
+            Cantidad / Stock
+          </label>
+          <input
+            className="herramienta-input"
+            id="herramienta-cantidad"
+            name="cantidad"
+            type="number"
+            min={1}
+            required
+            value={cantidad}
+            onChange={(e) => setCantidad(Number(e.target.value))}
+          />
+        </div>
+
+        {mensaje && <p className="herramienta-success">{mensaje}</p>}
+
+        <div className="herramienta-actions">
+          <button className="herramienta-button" type="submit">
+            {editandoId ? 'Guardar Cambios' : 'Guardar Herramienta'}
+          </button>
+          {editandoId && (
+            <button
+              className="herramienta-button herramienta-button--secondary"
+              type="button"
+              onClick={handleEditarCancelar}
+            >
+              Cancelar edición
+            </button>
+          )}
+        </div>
+      </form>
+
+      <h3 className="herramienta-list-title">Herramientas registradas</h3>
+
+      {herramientas && herramientas.length > 0 ? (
+        <table className="herramienta-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Estado</th>
+              <th>Stock</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {herramientas.map((h) => (
+              <tr key={h.id}>
+                <td>{h.nombre}</td>
+                <td>{h.categoria}</td>
+                <td>{etiquetaEstado(h.estadoFisico)}</td>
+                <td>{h.cantidad}</td>
+                <td className="herramienta-acciones">
+                  <button
+                    className="herramienta-btn-accion"
+                    type="button"
+                    onClick={() => handleEditar(h)}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className="herramienta-btn-accion herramienta-btn-accion--danger"
+                    type="button"
+                    onClick={() => handleEliminar(h)}
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="herramienta-empty">Aún no hay herramientas registradas.</p>
+      )}
+    </section>
+  )
+}
+
+export default FormularioHerramienta
+</file>
+
+<file path="frontend/src/components/Login.css">
+.login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px 28px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.login-title {
+  margin: 0 0 4px;
+  text-align: center;
+  font-size: 30px;
+  color: var(--text);
+}
+
+.login-subtitle {
+  margin: 0 0 28px;
+  text-align: center;
+  font-size: 18px;
+  color: var(--text-light);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-label {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.login-input {
+  font-size: 20px;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.login-input::placeholder {
+  color: var(--text-light);
+}
+
+.login-input:focus {
+  outline: 3px solid var(--focus-ring);
+  border-color: var(--primary);
+}
+
+.login-button {
+  margin-top: 4px;
+  padding: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--primary);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.login-button:hover,
+.login-button:focus-visible {
+  background: var(--primary-dark);
+}
+
+.login-button:active {
+  background: var(--primary-darker);
+}
+
+.login-button:disabled {
+  background: var(--border);
+  cursor: not-allowed;
+}
+
+.login-error {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--error);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.login-success {
+  margin: 0 0 24px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--success);
+  text-align: center;
+}
+</file>
+
+<file path="frontend/src/components/ReportesAdmin.css">
+.reportes {
+  min-height: 100vh;
+  display: flex;
+}
+
+.reportes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.reportes-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.reportes-card-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: var(--text-light);
+}
+
+.reportes-card-valor {
+  margin: 0;
+  font-size: 52px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.reportes-card-detalle {
+  margin: 8px 0 0;
+  font-size: 16px;
+  color: var(--text-light);
+}
+
+.reportes-card-vacio {
+  margin: 0;
+  font-size: 17px;
+  color: var(--text-light);
+}
+
+.reportes-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style-position: inside;
+}
+
+.reportes-list--ordenada {
+  padding-left: 0;
+}
+
+.reportes-item {
+  font-size: 17px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+@media (max-width: 720px) {
+  .reportes {
+    flex-direction: column;
+  }
+}
+</file>
+
+<file path="frontend/src/components/ReportesAdmin.tsx">
+import { Navigate, useNavigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../database/db'
+import { cerrarSesion, obtenerSesion } from '../services/session'
+import './ReportesAdmin.css'
+import './DashboardAdmin.css'
+
+const LIMITE_MOROSOS = 5
+
+function ReportesAdmin() {
+  const sesion = obtenerSesion()
+  const navigate = useNavigate()
+
+  const reporte = useLiveQuery(async () => {
+    const [prestamos, herramientas] = await Promise.all([
+      db.prestamos.toArray(),
+      db.herramientas.toArray(),
+    ])
+
+    const prestamosActivos = prestamos.filter((prestamo) => prestamo.estado === 'prestado')
+
+    const morosos = prestamosActivos.filter((prestamo) => prestamo.fechaDevolucion < Date.now())
+
+    const conteoPorHerramienta = new Map<string, number>()
+    for (const prestamo of prestamos) {
+      conteoPorHerramienta.set(
+        prestamo.herramientaId,
+        (conteoPorHerramienta.get(prestamo.herramientaId) ?? 0) + 1,
+      )
+    }
+    const nombresHerramientas = new Map(
+      herramientas.map((herramienta) => [herramienta.id, herramienta.nombre]),
+    )
+    const topHerramientas = [...conteoPorHerramienta.entries()]
+      .map(([id, total]) => ({
+        nombre: nombresHerramientas.get(id) ?? 'Herramienta no encontrada',
+        total,
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 3)
+
+    return { prestamosActivos, morosos, topHerramientas }
+  }, [])
+
+  if (!sesion || sesion.rol !== 'ADMINISTRADOR') {
+    return <Navigate to="/login" replace />
+  }
+
+  const handleCerrarSesion = () => {
+    const acepta = window.confirm('¿Desea cerrar sesión?')
+    if (!acepta) return
+    cerrarSesion()
+    navigate('/')
+  }
+
+  const cargando = reporte === undefined
+  const prestamosActivos = reporte?.prestamosActivos ?? []
+  const morosos = reporte?.morosos ?? []
+  const topHerramientas = reporte?.topHerramientas ?? []
+
+  return (
+    <div className="reportes">
+      <aside className="dashboard-sidebar">
+        <h1 className="dashboard-brand">Edu Control</h1>
+        <nav className="dashboard-nav">
+          <button
+            className="dashboard-nav-button"
+            type="button"
+            onClick={() => navigate('/dashboard')}
+          >
+            Volver
+          </button>
+          <button
+            className="dashboard-nav-button dashboard-nav-button--danger"
+            type="button"
+            onClick={handleCerrarSesion}
+          >
+            Cerrar Sesión
+          </button>
+        </nav>
+        <p className="dashboard-user">
+          {sesion.nombre} · {sesion.rol}
+        </p>
+      </aside>
+
+      <main className="dashboard-content">
+        <h2 className="dashboard-title">Reportes</h2>
+        {cargando && <p className="reportes-card-vacio">Cargando datos…</p>}
+
+        <div className="reportes-grid">
+          <article className="reportes-card">
+            <h3 className="reportes-card-title">Préstamos Activos</h3>
+            <p className="reportes-card-valor">{cargando ? '…' : prestamosActivos.length}</p>
+            <p className="reportes-card-detalle">Préstamos en curso en este momento</p>
+          </article>
+
+          <article className="reportes-card">
+            <h3 className="reportes-card-title">Usuarios morosos</h3>
+            <p className="reportes-card-valor">{cargando ? '…' : morosos.length}</p>
+            {!cargando && (morosos.length > 0 ? (
+              <>
+                <ul className="reportes-list">
+                  {morosos.slice(0, LIMITE_MOROSOS).map((prestamo) => (
+                    <li className="reportes-item" key={prestamo.id}>
+                      {prestamo.receptor}
+                    </li>
+                  ))}
+                </ul>
+                {morosos.length > LIMITE_MOROSOS && (
+                  <p className="reportes-card-vacio">…y {morosos.length - LIMITE_MOROSOS} más</p>
+                )}
+              </>
+            ) : (
+              <p className="reportes-card-vacio">Sin usuarios morosos</p>
+            ))}
+          </article>
+
+          <article className="reportes-card">
+            <h3 className="reportes-card-title">Herramientas más prestadas</h3>
+            {!cargando && (topHerramientas.length > 0 ? (
+              <ol className="reportes-list">
+                {topHerramientas.map((herramienta) => (
+                  <li className="reportes-item" key={herramienta.nombre}>
+                    {herramienta.nombre} — {herramienta.total} préstamos
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="reportes-card-vacio">Sin datos suficientes</p>
+            ))}
+          </article>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default ReportesAdmin
+</file>
+
+<file path="frontend/package.json">
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "dexie": "^4.4.5",
+    "dexie-react-hooks": "^4.4.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3",
+    "vite-plugin-pwa": "^1.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "oxlint": "^1.79.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  }
+}
+</file>
+
+<file path="frontend/src/components/NuevoPrestamo.css">
+.prestamo {
+  min-height: 100vh;
+  display: flex;
+}
+
+.prestamo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 24px;
+  max-width: 480px;
+}
+
+.prestamo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prestamo-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.prestamo-mini-button {
+  padding: 8px 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  background: transparent;
+  border: 2px solid var(--primary);
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.prestamo-mini-button:hover,
+.prestamo-mini-button:focus-visible {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.prestamo-mini-button--solid {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.prestamo-mini-button--solid:hover,
+.prestamo-mini-button--solid:focus-visible {
+  background: var(--primary-dark);
+}
+
+.prestamo-subform {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.prestamo-subform .prestamo-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.prestamo-subform .prestamo-error {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.prestamo-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.prestamo-input {
+  font-size: 19px;
+  padding: 13px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.prestamo-input:focus {
+  outline: 3px solid var(--focus-ring);
+  border-color: var(--primary);
+}
+
+.prestamo-button {
+  margin-top: 8px;
+  padding: 15px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--primary);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.prestamo-button:hover,
+.prestamo-button:focus-visible {
+  background: var(--primary-dark);
+}
+
+.prestamo-button:disabled {
+  background: var(--border);
+  cursor: not-allowed;
+}
+
+.prestamo-error {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--error);
+}
+
+.prestamo-success {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.prestamo-placeholder {
+  font-size: 17px;
+  color: var(--text-light);
+}
+
+@media (max-width: 720px) {
+  .prestamo {
+    flex-direction: column;
+  }
+}
+</file>
+
+<file path="frontend/src/database/db.ts">
+import Dexie, { type EntityTable } from 'dexie'
+import type { Herramienta, Prestamo, Proyecto, Usuario } from './models'
+
+export type EduControlDatabase = Dexie & {
+  usuarios: EntityTable<Usuario, 'id'>
+  herramientas: EntityTable<Herramienta, 'id'>
+  proyectos: EntityTable<Proyecto, 'id'>
+  prestamos: EntityTable<Prestamo, 'id'>
+}
+
+const db = new Dexie('edu-control') as EduControlDatabase
+
+db.version(1).stores({
+  usuarios: 'id, nombre, rol',
+  herramientas: 'id, nombre',
+  proyectos: 'id, nombre',
+  prestamos: 'id, herramientaId, usuarioId, proyectoId, estado, fechaDevolucionEsperada',
+})
+
+db.version(2).stores({
+  herramientas: 'id, nombre, categoria',
+})
+
+db.version(3).stores({
+  prestamos: 'id, herramientaId, usuarioId, estado, fechaDevolucion, receptor',
+})
+
+export { db }
+</file>
+
+<file path="backend/src/routes/sync.ts">
+import { Router } from 'express'
+import { prisma } from '../lib/prisma.js'
+import type { EstadoPrestamo, Prisma, Rol } from '@prisma/client'
+
+const ROLES: Rol[] = ['ADMINISTRADOR', 'RECEPCION', 'USUARIO']
+const ESTADOS: EstadoPrestamo[] = ['prestado', 'devuelto', 'atrasado']
+
+const router = Router()
+
+interface SyncPayload {
+  usuarios?: Array<{ id: string; nombre: string; rol: Rol; createdAt?: string | Date; updatedAt?: string | Date }>
+  herramientas?: Array<{
+    id: string
+    nombre: string
+    categoria?: string
+    estadoFisico?: string
+    descripcion?: string | null
+    cantidad: number
+    disponible?: boolean
+    createdAt?: string | Date
+    updatedAt?: string | Date
+  }>
+  proyectos?: Array<{
+    id: string
+    nombre: string
+    descripcion?: string | null
+    createdAt?: string | Date
+    updatedAt?: string | Date
+  }>
+  prestamos?: Array<{
+    id: string
+    herramientaId: string
+    usuarioId: string
+    proyectoId?: string | null
+    fechaSalida?: string | number | Date
+    fechaDevolucionEsperada?: string | number | Date
+    fechaDevolucion?: string | number | Date
+    fechaDevolucionReal?: string | number | Date | null
+    estado?: EstadoPrestamo
+    receptor?: string
+    createdAt?: string | number | Date
+  }>
+}
+
+const toDate = (value: string | number | Date | null | undefined) =>
+  value === undefined || value === null ? undefined : new Date(value)
+
+class SyncValidationError extends Error {}
+
+interface SyncPrestamo {
+  id: string
+  herramientaId: string
+  usuarioId: string
+  proyectoId?: string | null
+  fechaSalida?: string | number | Date
+  fechaDevolucionEsperada?: string | number | Date
+  fechaDevolucion?: string | number | Date
+  fechaDevolucionReal?: string | number | Date | null
+  estado?: EstadoPrestamo
+  receptor?: string
+  createdAt?: string | number | Date
+}
+
+const estadoValido = (estado: EstadoPrestamo | undefined): EstadoPrestamo => {
+  if (estado !== undefined && ESTADOS.includes(estado)) {
+    return estado
+  }
+  return 'prestado'
+}
+
+const prestamoParaActualizar = (p: SyncPrestamo, fechaDevolucionEsperada: Date) => ({
+  herramientaId: p.herramientaId,
+  usuarioId: p.usuarioId,
+  proyectoId: p.proyectoId ?? null,
+  fechaSalida: toDate(p.fechaSalida) ?? new Date(),
+  fechaDevolucionEsperada,
+  fechaDevolucionReal: toDate(p.fechaDevolucionReal) ?? null,
+  estado: estadoValido(p.estado),
+})
+
+const prestamoParaCrear = (p: SyncPrestamo, fechaDevolucionEsperada: Date) => ({
+  ...prestamoParaActualizar(p, fechaDevolucionEsperada),
+  id: p.id,
+  createdAt: toDate(p.createdAt) ?? new Date(),
+})
+
+async function asegurarDependenciasPrestamo(
+  tx: Prisma.TransactionClient,
+  prestamo: SyncPrestamo,
+): Promise<Date> {
+  const usuario = await tx.usuario.findUnique({
+    where: { id: prestamo.usuarioId },
+    select: { id: true },
+  })
+  if (!usuario) {
+    if (!prestamo.receptor) {
+      throw new SyncValidationError(
+        `Préstamo ${prestamo.id}: el usuario ${prestamo.usuarioId} no existe en la nube y falta el receptor para crearlo`,
+      )
+    }
+    await tx.usuario.create({
+      data: {
+        id: prestamo.usuarioId,
+        nombre: prestamo.receptor,
+        rol: 'USUARIO',
+        createdAt: toDate(prestamo.fechaSalida) ?? new Date(),
+        updatedAt: toDate(prestamo.fechaSalida) ?? new Date(),
+      },
+    })
+  }
+
+  const herramienta = await tx.herramienta.findUnique({
+    where: { id: prestamo.herramientaId },
+    select: { id: true },
+  })
+  if (!herramienta) {
+    throw new SyncValidationError(
+      `Préstamo ${prestamo.id}: la herramienta ${prestamo.herramientaId} no existe en la nube; sincronice primero el catálogo`,
+    )
+  }
+
+  if (prestamo.proyectoId) {
+    const proyecto = await tx.proyecto.findUnique({
+      where: { id: prestamo.proyectoId },
+      select: { id: true },
+    })
+    if (!proyecto) {
+      throw new SyncValidationError(
+        `Préstamo ${prestamo.id}: el proyecto ${prestamo.proyectoId} no existe en la nube`,
+      )
+    }
+  }
+
+  return toDate(prestamo.fechaDevolucion ?? prestamo.fechaDevolucionEsperada) ?? new Date()
+}
+
+async function sincronizarPrestamos(
+  tx: Prisma.TransactionClient,
+  prestamos: SyncPrestamo[],
+): Promise<number> {
+  for (const prestamo of prestamos) {
+    const fechaDevolucionEsperada = await asegurarDependenciasPrestamo(tx, prestamo)
+    await tx.prestamo.upsert({
+      where: { id: prestamo.id },
+      update: prestamoParaActualizar(prestamo, fechaDevolucionEsperada),
+      create: prestamoParaCrear(prestamo, fechaDevolucionEsperada),
+    })
+  }
+  return prestamos.length
+}
+
+interface SyncHerramienta {
+  id: string
+  nombre: string
+  categoria: string
+  estadoFisico: string
+  cantidad: number
+  disponible?: boolean
+  createdAt?: string | Date
+  updatedAt?: string | Date
+}
+
+router.get('/herramientas', async (_req, res) => {
+  const herramientas = await prisma.herramienta.findMany({
+    orderBy: { createdAt: 'asc' },
+  })
+  res.json(herramientas)
+})
+
+router.post('/herramientas', async (req, res) => {
+  const payload = req.body as SyncHerramienta[]
+
+  if (!Array.isArray(payload)) {
+    res.status(400).json({ error: 'El body debe ser un array de herramientas' })
+    return
+  }
+
+  const herramientas = await prisma.$transaction(
+    payload.map((h) =>
+      prisma.herramienta.upsert({
+        where: { id: h.id },
+        update: {
+          nombre: h.nombre,
+          categoria: h.categoria,
+          estadoFisico: h.estadoFisico,
+          cantidad: h.cantidad,
+          disponible: h.disponible ?? true,
+          updatedAt: toDate(h.updatedAt) ?? new Date(),
+        },
+        create: {
+          id: h.id,
+          nombre: h.nombre,
+          categoria: h.categoria,
+          estadoFisico: h.estadoFisico,
+          cantidad: h.cantidad ?? 1,
+          disponible: h.disponible ?? true,
+          createdAt: toDate(h.createdAt) ?? new Date(),
+          updatedAt: toDate(h.updatedAt) ?? new Date(),
+        },
+      }),
+    ),
+  )
+
+  res.json({ herramientas: herramientas.length })
+})
+
+router.post('/prestamos', async (req, res) => {
+  const payload = req.body as SyncPrestamo[]
+
+  if (!Array.isArray(payload)) {
+    res.status(400).json({ error: 'El body debe ser un array de préstamos' })
+    return
+  }
+
+  try {
+    const procesados = await prisma.$transaction((tx) => sincronizarPrestamos(tx, payload))
+    res.json({ prestamos: procesados })
+  } catch (error) {
+    if (error instanceof SyncValidationError) {
+      res.status(400).json({ error: error.message })
+      return
+    }
+    throw error
+  }
+})
+
+router.post('/', async (req, res) => {
+  const payload = req.body as SyncPayload
+
+  const usuarios = await prisma.$transaction(
+    (payload.usuarios ?? []).map((u) =>
+      prisma.usuario.upsert({
+        where: { id: u.id },
+        update: {
+          nombre: u.nombre,
+          rol: ROLES.includes(u.rol) ? u.rol : 'USUARIO',
+          updatedAt: toDate(u.updatedAt) ?? new Date(),
+        },
+        create: {
+          id: u.id,
+          nombre: u.nombre,
+          rol: ROLES.includes(u.rol) ? u.rol : 'USUARIO',
+          createdAt: toDate(u.createdAt) ?? new Date(),
+          updatedAt: toDate(u.updatedAt) ?? new Date(),
+        },
+      }),
+    ),
+  )
+
+  const herramientas = await prisma.$transaction(
+    (payload.herramientas ?? []).map((h) =>
+      prisma.herramienta.upsert({
+        where: { id: h.id },
+        update: {
+          nombre: h.nombre,
+          categoria: h.categoria ?? 'General',
+          estadoFisico: h.estadoFisico ?? 'bueno',
+          descripcion: h.descripcion,
+          cantidad: h.cantidad,
+          disponible: h.disponible ?? true,
+          updatedAt: toDate(h.updatedAt) ?? new Date(),
+        },
+        create: {
+          id: h.id,
+          nombre: h.nombre,
+          categoria: h.categoria ?? 'General',
+          estadoFisico: h.estadoFisico ?? 'bueno',
+          descripcion: h.descripcion,
+          cantidad: h.cantidad ?? 1,
+          disponible: h.disponible ?? true,
+          createdAt: toDate(h.createdAt) ?? new Date(),
+          updatedAt: toDate(h.updatedAt) ?? new Date(),
+        },
+      }),
+    ),
+  )
+
+  const proyectos = await prisma.$transaction(
+    (payload.proyectos ?? []).map((p) =>
+      prisma.proyecto.upsert({
+        where: { id: p.id },
+        update: {
+          nombre: p.nombre,
+          descripcion: p.descripcion,
+          updatedAt: toDate(p.updatedAt) ?? new Date(),
+        },
+        create: {
+          id: p.id,
+          nombre: p.nombre,
+          descripcion: p.descripcion,
+          createdAt: toDate(p.createdAt) ?? new Date(),
+          updatedAt: toDate(p.updatedAt) ?? new Date(),
+        },
+      }),
+    ),
+  )
+
+  let prestamos = 0
+  try {
+    prestamos = await prisma.$transaction((tx) =>
+      sincronizarPrestamos(tx, (payload.prestamos ?? []) as SyncPrestamo[]),
+    )
+  } catch (error) {
+    if (error instanceof SyncValidationError) {
+      res.status(400).json({ error: error.message })
+      return
+    }
+    throw error
+  }
+
+  res.json({
+    usuarios: usuarios.length,
+    herramientas: herramientas.length,
+    proyectos: proyectos.length,
+    prestamos,
+  })
+})
+
+export default router
+</file>
+
+<file path="frontend/src/components/DashboardRecepcion.tsx">
+import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { cerrarSesion, obtenerSesion } from '../services/session'
+import './DashboardAdmin.css'
+
+function DashboardRecepcion() {
+  const sesion = obtenerSesion()
+  const navigate = useNavigate()
+
+  if (!sesion || (sesion.rol !== 'RECEPCION' && sesion.rol !== 'ADMINISTRADOR')) {
+    return <Navigate to="/login" replace />
+  }
+
+  const handleCerrarSesion = () => {
+    const acepta = window.confirm('¿Desea cerrar sesión?')
+    if (!acepta) return
+    cerrarSesion()
+    navigate('/')
+  }
+
+  const hoy = new Date().toLocaleDateString('es-MX', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+
+  return (
+    <div className="dashboard">
+      <aside className="dashboard-sidebar">
+        <h1 className="dashboard-brand">Edu Control</h1>
+        <nav className="dashboard-nav">
+          <Link className="dashboard-nav-button dashboard-nav-button--active" to="/nuevo-prestamo">
+            Registrar Nuevo Préstamo
+          </Link>
+          <button
+            className="dashboard-nav-button dashboard-nav-button--danger"
+            type="button"
+            onClick={handleCerrarSesion}
+          >
+            Cerrar Sesión
+          </button>
+        </nav>
+        <p className="dashboard-user">
+          {sesion.nombre} · {sesion.rol}
+        </p>
+      </aside>
+
+      <main className="dashboard-content">
+        <h2 className="dashboard-title">Módulo de Recepción</h2>
+        <p className="dashboard-placeholder">{hoy}</p>
+        <p className="dashboard-placeholder">
+          Use «Registrar Nuevo Préstamo» para prestar una herramienta del catálogo.
+        </p>
+      </main>
+    </div>
+  )
+}
+
+export default DashboardRecepcion
+</file>
+
+<file path="frontend/src/database/models.ts">
+export type Rol = 'ADMINISTRADOR' | 'RECEPCION' | 'USUARIO'
+
+export type EstadoPrestamo = 'prestado' | 'devuelto' | 'atrasado'
+
+export interface Usuario {
+  id: string
+  nombre: string
+  rol: Rol
+  contrasena?: string
+  createdAt: number
+  updatedAt: number
+}
+
+export type EstadoFisico = 'excelente' | 'bueno' | 'regular' | 'mantenimiento'
+
+export interface Herramienta {
+  id: string
+  nombre: string
+  categoria: string
+  estadoFisico: EstadoFisico
+  cantidad: number
+  disponible: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface Proyecto {
+  id: string
+  nombre: string
+  descripcion?: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface Prestamo {
+  id: string
+  herramientaId: string
+  usuarioId: string
+  receptor: string
+  proyectoId?: string
+  fechaSalida: number
+  fechaDevolucion: number
+  fechaDevolucionReal?: number
+  estado: EstadoPrestamo
+  createdAt: number
+}
+</file>
+
+<file path="frontend/src/services/syncService.ts">
+import { db } from '../database/db'
+import type { Usuario } from '../database/models'
+
+const API_URL = 'http://localhost:4000/api/sync'
+
+interface ApiUsuario {
+  id: string
+  nombre: string
+  rol: Usuario['rol']
+  contrasena?: string
+  createdAt: string
+  updatedAt: string
+  _count?: { prestamos: number }
+}
+
+export async function sincronizarUsuarios(): Promise<void> {
+  const res = await fetch(`${API_URL}/usuarios`)
+  if (!res.ok) {
+    throw new Error(`Error al sincronizar usuarios: ${res.status}`)
+  }
+
+  const data = (await res.json()) as ApiUsuario[]
+
+  const usuarios: Usuario[] = data.map((u) => ({
+    id: u.id,
+    nombre: u.nombre,
+    rol: u.rol,
+    contrasena: u.contrasena,
+    createdAt: new Date(u.createdAt).getTime(),
+    updatedAt: new Date(u.updatedAt).getTime(),
+  }))
+
+  await db.usuarios.bulkPut(usuarios)
+}
+
+export async function sincronizarDatos(): Promise<void> {
+  const [herramientas, usuarios, proyectos, prestamos] = await Promise.all([
+    db.herramientas.toArray(),
+    db.usuarios.toArray(),
+    db.proyectos.toArray(),
+    db.prestamos.toArray(),
+  ])
+
+  const enviar = (ruta: string, body: unknown) =>
+    fetch(`${API_URL}${ruta}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+  const asegurarRespuestaExitoso = async (ruta: string, respuesta: Response) => {
+    if (!respuesta.ok) {
+      throw new Error(`Error al sincronizar ${ruta}: ${respuesta.status}`)
+    }
+  }
+
+  const resHerramientas = await enviar('/herramientas', herramientas)
+  await asegurarRespuestaExitoso('herramientas', resHerramientas)
+
+  const resGeneral = await enviar('/', { usuarios, proyectos })
+  await asegurarRespuestaExitoso('usuarios y proyectos', resGeneral)
+
+  const resPrestamos = await enviar('/prestamos', prestamos)
+  await asegurarRespuestaExitoso('préstamos', resPrestamos)
+}
+</file>
+
+<file path="frontend/src/components/DashboardAdmin.tsx">
+import { useState } from 'react'
+import { Navigate, useNavigate } from 'react-router-dom'
+import { cerrarSesion, obtenerSesion } from '../services/session'
+import { sincronizarDatos } from '../services/syncService'
+import FormularioHerramienta from './FormularioHerramienta'
+import './DashboardAdmin.css'
+
+const SECCIONES = ['Catálogo de Herramientas', 'Préstamos'] as const
+type Seccion = (typeof SECCIONES)[number]
+
+function DashboardAdmin() {
+  const sesion = obtenerSesion()
+  const navigate = useNavigate()
+  const [activa, setActiva] = useState<Seccion>('Catálogo de Herramientas')
+  const [sincronizando, setSincronizando] = useState(false)
+
+  if (!sesion || sesion.rol !== 'ADMINISTRADOR') {
+    return <Navigate to="/login" replace />
+  }
+
+  const handleSincronizar = async () => {
+    setSincronizando(true)
+    try {
+      await sincronizarDatos()
+      window.alert('Sincronización completada')
+    } catch (err) {
+      console.error('Error al sincronizar:', err)
+      window.alert('No se pudo sincronizar. Revisa tu conexión a la nube.')
+    } finally {
+      setSincronizando(false)
+    }
+  }
+
+  const handleCerrarSesion = () => {
+    const acepta = window.confirm('¿Desea cerrar sesión?')
+    if (!acepta) return
+    cerrarSesion()
+    navigate('/')
+  }
+
+  return (
+    <div className="dashboard">
+      <aside className="dashboard-sidebar">
+        <h1 className="dashboard-brand">Edu Control</h1>
+        <nav className="dashboard-nav">
+          {SECCIONES.map((seccion) => (
+            <button
+              key={seccion}
+              type="button"
+              className={`dashboard-nav-button${activa === seccion ? ' dashboard-nav-button--active' : ''}`}
+              onClick={() => setActiva(seccion)}
+            >
+              {seccion}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="dashboard-nav-button"
+            onClick={() => navigate('/reportes')}
+          >
+            Reportes
+          </button>
+          <button
+            type="button"
+            className="dashboard-nav-button"
+            disabled={sincronizando}
+            onClick={handleSincronizar}
+          >
+            {sincronizando ? 'Sincronizando…' : 'Sincronizar con la Nube'}
+          </button>
+          <button
+            type="button"
+            className="dashboard-nav-button dashboard-nav-button--danger"
+            onClick={handleCerrarSesion}
+          >
+            Cerrar Sesión
+          </button>
+        </nav>
+        <p className="dashboard-user">
+          {sesion.nombre} · {sesion.rol}
+        </p>
+      </aside>
+
+      <main className="dashboard-content">
+        {activa === 'Catálogo de Herramientas' ? (
+          <FormularioHerramienta />
+        ) : (
+          <>
+            <h2 className="dashboard-title">{activa}</h2>
+            <p className="dashboard-placeholder">Sección en construcción.</p>
+          </>
+        )}
+      </main>
+    </div>
+  )
+}
+
+export default DashboardAdmin
+</file>
+
+<file path="frontend/src/components/Login.tsx">
+import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { db } from '../database/db'
+import { guardarSesion } from '../services/session'
+import { validarUsuario } from '../utils/validations'
+import './Login.css'
+
+function Login() {
+  const [usuario, setUsuario] = useState('')
+  const [contrasena, setContrasena] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  const usuarioInvalido = usuario.length > 0 && !validarUsuario(usuario)
+
+  const handleUsuarioChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUsuario(event.target.value.toLowerCase())
+  }
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+
+    const encontrado = await db.usuarios.where('nombre').equals(usuario.trim()).first()
+
+    if (!encontrado || encontrado.contrasena !== contrasena) {
+      setError('Credenciales incorrectas')
+      return
+    }
+
+    guardarSesion({ id: encontrado.id, nombre: encontrado.nombre, rol: encontrado.rol })
+
+    if (encontrado.rol === 'ADMINISTRADOR') {
+      navigate('/dashboard')
+    } else if (encontrado.rol === 'RECEPCION') {
+      navigate('/nuevo-prestamo')
+    } else {
+      navigate('/usuario')
+    }
+  }
+
+  return (
+    <main className="login">
+      <section className="login-card">
+        <h1 className="login-title">Edu Control</h1>
+        <p className="login-subtitle">Ingrese sus datos para continuar</p>
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="login-field">
+            <label className="login-label" htmlFor="usuario">
+              Usuario
+            </label>
+            <input
+              className="login-input"
+              id="usuario"
+              name="usuario"
+              type="text"
+              autoComplete="username"
+              autoFocus
+              required
+              value={usuario}
+              onChange={handleUsuarioChange}
+            />
+            {usuarioInvalido && (
+              <p className="login-error">
+                Solo minúsculas, números, guiones (-) y guiones bajos (_)
+              </p>
+            )}
+          </div>
+
+          <div className="login-field">
+            <label className="login-label" htmlFor="contrasena">
+              Contraseña
+            </label>
+            <input
+              className="login-input"
+              id="contrasena"
+              name="contrasena"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={contrasena}
+              onChange={(e) => setContrasena(e.target.value)}
+            />
+          </div>
+
+          {error && <p className="login-error">{error}</p>}
+
+          <button className="login-button" type="submit" disabled={usuarioInvalido}>
+            Entrar
+          </button>
+        </form>
+      </section>
+    </main>
+  )
+}
+
+export default Login
+</file>
+
+<file path="frontend/src/App.tsx">
+import { type ReactNode, useEffect } from 'react'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import DashboardAdmin from './components/DashboardAdmin'
+import DashboardRecepcion from './components/DashboardRecepcion'
+import Login from './components/Login'
+import NuevoPrestamo from './components/NuevoPrestamo'
+import PanelUsuario from './components/PanelUsuario'
+import ReportesAdmin from './components/ReportesAdmin'
+import type { Rol } from './database/models'
+import { obtenerSesion } from './services/session'
+import { sincronizarUsuarios } from './services/syncService'
+
+function ProtectedRoute({ roles, children }: { roles: Rol[]; children: ReactNode }) {
+  const sesion = obtenerSesion()
+  if (!sesion || !roles.includes(sesion.rol)) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
+
+function DefaultRedirect() {
+  const sesion = obtenerSesion()
+  if (sesion?.rol === 'ADMINISTRADOR') {
+    return <Navigate to="/dashboard" replace />
+  }
+  if (sesion?.rol === 'RECEPCION') {
+    return <Navigate to="/recepcion" replace />
+  }
+  if (sesion?.rol === 'USUARIO') {
+    return <Navigate to="/usuario" replace />
+  }
+  return <Navigate to="/login" replace />
+}
+
+function App() {
+  useEffect(() => {
+    sincronizarUsuarios()
+      .then(() => console.log('Sincronización de usuarios completada'))
+      .catch((err) => console.error('Error al sincronizar usuarios:', err))
+  }, [])
+
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<DefaultRedirect />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute roles={['ADMINISTRADOR']}>
+              <DashboardAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recepcion"
+          element={
+            <ProtectedRoute roles={['RECEPCION', 'ADMINISTRADOR']}>
+              <DashboardRecepcion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nuevo-prestamo"
+          element={
+            <ProtectedRoute roles={['RECEPCION', 'ADMINISTRADOR']}>
+              <NuevoPrestamo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/usuario"
+          element={
+            <ProtectedRoute roles={['USUARIO']}>
+              <PanelUsuario />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reportes"
+          element={
+            <ProtectedRoute roles={['ADMINISTRADOR']}>
+              <ReportesAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<DefaultRedirect />} />
+      </Routes>
+    </HashRouter>
+  )
+}
+
+export default App
+</file>
+
+<file path="frontend/src/components/NuevoPrestamo.tsx">
+import { useState, type FormEvent } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useNavigate } from 'react-router-dom'
+import { db } from '../database/db'
+import type { Prestamo, Proyecto, Usuario } from '../database/models'
+import { uuidv4 } from '../database/uuid'
+import { cerrarSesion, obtenerSesion } from '../services/session'
+import './NuevoPrestamo.css'
+
+function NuevoPrestamo() {
+  const sesion = obtenerSesion()
+  const navigate = useNavigate()
+  const [nombreRecibe, setNombreRecibe] = useState('')
+  const [herramientaId, setHerramientaId] = useState('')
+  const [proyectoId, setProyectoId] = useState('')
+  const [fechaDevolucion, setFechaDevolucion] = useState('')
+  const [error, setError] = useState('')
+  const [mostrarFormProyecto, setMostrarFormProyecto] = useState(false)
+  const [nombreProyecto, setNombreProyecto] = useState('')
+  const [errorProyecto, setErrorProyecto] = useState('')
+
+  const herramientasDisponibles = useLiveQuery(async () => {
+    const todas = await db.herramientas.toArray()
+    return todas
+      .filter((herramienta) => herramienta.disponible && herramienta.cantidad > 0)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+  }, [])
+
+  const proyectos = useLiveQuery(async () => {
+    const todos = await db.proyectos.toArray()
+    return todos.sort((a, b) => a.nombre.localeCompare(b.nombre))
+  }, [])
+
+  const esAdministrador = sesion?.rol === 'ADMINISTRADOR'
+
+  const ahora = new Date()
+  const fechaMinima = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+
+    const herramienta = herramientasDisponibles?.find((h) => h.id === herramientaId)
+    if (!herramienta) {
+      setError('Selecciona una herramienta disponible')
+      return
+    }
+    if (herramienta.cantidad <= 0) {
+      setError('La herramienta seleccionada ya no tiene stock disponible')
+      return
+    }
+
+    const nombre = nombreRecibe.trim()
+    let usuario = (await db.usuarios.where('nombre').equals(nombre).first()) as Usuario | undefined
+    if (!usuario) {
+      usuario = {
+        id: uuidv4(),
+        nombre,
+        rol: 'USUARIO',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+      await db.usuarios.add(usuario)
+    }
+
+    const marcaDeTiempo = Date.now()
+    const prestamo: Prestamo = {
+      id: uuidv4(),
+      herramientaId: herramienta.id,
+      usuarioId: usuario.id,
+      proyectoId: proyectoId || undefined,
+      receptor: nombre,
+      fechaSalida: marcaDeTiempo,
+      fechaDevolucion: new Date(fechaDevolucion).getTime(),
+      estado: 'prestado',
+      createdAt: marcaDeTiempo,
+    }
+
+    await db.prestamos.add(prestamo)
+    await db.herramientas.update(herramienta.id, {
+      cantidad: herramienta.cantidad - 1,
+      disponible: herramienta.cantidad - 1 > 0,
+      updatedAt: marcaDeTiempo,
+    })
+
+    console.log('Préstamo registrado:', prestamo)
+    window.alert('Préstamo registrado correctamente')
+    setNombreRecibe('')
+    setHerramientaId('')
+    setProyectoId('')
+    setFechaDevolucion('')
+  }
+
+  const handleCerrarSesion = () => {
+    const acepta = window.confirm('¿Desea cerrar sesión?')
+    if (!acepta) return
+    cerrarSesion()
+    navigate('/')
+  }
+
+  const handleGuardarProyecto = async () => {
+    const nombre = nombreProyecto.trim()
+    if (!nombre) {
+      setErrorProyecto('Escribe el nombre del proyecto')
+      return
+    }
+
+    const proyecto: Proyecto = {
+      id: uuidv4(),
+      nombre,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+
+    await db.proyectos.add(proyecto)
+    setProyectoId(proyecto.id)
+    setNombreProyecto('')
+    setErrorProyecto('')
+    setMostrarFormProyecto(false)
+  }
+
+  const cargandoInventario = herramientasDisponibles === undefined
+
+  return (
+    <div className="prestamo">
+      <aside className="dashboard-sidebar">
+        <h1 className="dashboard-brand">Edu Control</h1>
+        <nav className="dashboard-nav">
+          {esAdministrador && (
+            <button
+              className="dashboard-nav-button"
+              type="button"
+              onClick={() => navigate('/dashboard')}
+            >
+              Volver
+            </button>
+          )}
+          <button
+            className="dashboard-nav-button dashboard-nav-button--danger"
+            type="button"
+            onClick={handleCerrarSesion}
+          >
+            Cerrar Sesión
+          </button>
+        </nav>
+        <p className="dashboard-user">
+          {sesion?.nombre} · {sesion?.rol}
+        </p>
+      </aside>
+
+      <main className="dashboard-content">
+        <h2 className="dashboard-title">Registrar Nuevo Préstamo</h2>
+
+        <form className="prestamo-form" onSubmit={handleSubmit}>
+          <div className="prestamo-field">
+            <label className="prestamo-label" htmlFor="prestamo-nombre">
+              Nombre de quien recibe la herramienta
+            </label>
+            <input
+              className="prestamo-input"
+              id="prestamo-nombre"
+              name="nombreRecibe"
+              type="text"
+              autoComplete="off"
+              required
+              value={nombreRecibe}
+              onChange={(e) => setNombreRecibe(e.target.value)}
+            />
+          </div>
+
+          <div className="prestamo-field">
+            <label className="prestamo-label" htmlFor="prestamo-herramienta">
+              Herramienta
+            </label>
+            {cargandoInventario ? (
+              <p className="prestamo-placeholder">Cargando inventario…</p>
+            ) : herramientasDisponibles.length === 0 ? (
+              <p className="prestamo-placeholder">
+                No hay herramientas disponibles para prestar.
+              </p>
+            ) : (
+              <select
+                className="prestamo-input"
+                id="prestamo-herramienta"
+                name="herramientaId"
+                required
+                value={herramientaId}
+                onChange={(e) => setHerramientaId(e.target.value)}
+              >
+                <option value="" disabled>
+                  Seleccione una herramienta
+                </option>
+                {herramientasDisponibles.map((herramienta) => (
+                  <option key={herramienta.id} value={herramienta.id}>
+                    {herramienta.nombre} - Disponibles: {herramienta.cantidad}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="prestamo-field">
+            <div className="prestamo-field-row">
+              <label className="prestamo-label" htmlFor="prestamo-proyecto">
+                Proyecto Educativo
+              </label>
+              <button
+                className="prestamo-mini-button"
+                type="button"
+                onClick={() => setMostrarFormProyecto((visible) => !visible)}
+              >
+                {mostrarFormProyecto ? 'Cancelar' : '+ Nuevo Proyecto'}
+              </button>
+            </div>
+            {proyectos === undefined ? (
+              <p className="prestamo-placeholder">Cargando proyectos…</p>
+            ) : (
+              <select
+                className="prestamo-input"
+                id="prestamo-proyecto"
+                name="proyectoId"
+                value={proyectoId}
+                onChange={(e) => setProyectoId(e.target.value)}
+              >
+                <option value="">Sin proyecto</option>
+                {proyectos.map((proyecto) => (
+                  <option key={proyecto.id} value={proyecto.id}>
+                    {proyecto.nombre}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {mostrarFormProyecto && (
+              <div className="prestamo-subform">
+                <input
+                  className="prestamo-input"
+                  id="prestamo-nuevo-proyecto"
+                  name="nombreProyecto"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="Nombre del proyecto"
+                  value={nombreProyecto}
+                  onChange={(e) => {
+                    setNombreProyecto(e.target.value)
+                    if (errorProyecto) setErrorProyecto('')
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleGuardarProyecto()
+                    }
+                  }}
+                />
+                <button
+                  className="prestamo-mini-button prestamo-mini-button--solid"
+                  type="button"
+                  onClick={handleGuardarProyecto}
+                >
+                  Guardar Proyecto
+                </button>
+                {errorProyecto && <p className="prestamo-error">{errorProyecto}</p>}
+              </div>
+            )}
+          </div>
+
+          <div className="prestamo-field">
+            <label className="prestamo-label" htmlFor="prestamo-fecha">
+              Fecha de devolución
+            </label>
+            <input
+              className="prestamo-input"
+              id="prestamo-fecha"
+              name="fechaDevolucion"
+              type="date"
+              min={fechaMinima}
+              required
+              value={fechaDevolucion}
+              onChange={(e) => setFechaDevolucion(e.target.value)}
+            />
+          </div>
+
+          {error && <p className="prestamo-error">{error}</p>}
+
+          <button
+            className="prestamo-button"
+            type="submit"
+            disabled={herramientasDisponibles?.length === 0}
+          >
+            Guardar Préstamo
+          </button>
+        </form>
+      </main>
+    </div>
+  )
+}
+
+export default NuevoPrestamo
+</file>
+
+</files>
