@@ -111,15 +111,17 @@ export function iniciarOrquestador(): () => void {
 
   const alConectar = () => {
     fallosConsecutivos = 0
-    void ejecutarCiclo()
+    // Feedback inmediato antes de tocar IndexedDB o la red.
+    notificar({ estado: 'sincronizando', mensaje: 'Conexion restaurada, enviando datos' })
+    void ejecutarCiclo(true)
   }
 
   const alDesconectar = () => {
+    // Notificar SINCRONAMENTE: no depender de una promesa de Dexie para re-renderizar.
+    notificar({ estado: 'sin-red', mensaje: 'Trabajando sin conexion' })
     void contarPendientes()
-      .then((pendientes) =>
-        notificar({ estado: 'sin-red', pendientes, mensaje: 'Trabajando sin conexion' }),
-      )
-      .catch(() => notificar({ estado: 'sin-red', mensaje: 'Trabajando sin conexion' }))
+      .then((pendientes) => notificar({ pendientes }))
+      .catch(() => undefined)
   }
 
   const alVolverAlFoco = () => {
