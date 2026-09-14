@@ -51,39 +51,57 @@ function NuevoPrestamo() {
     }
 
     const nombre = nombreRecibe.trim()
-    let usuario = (await db.usuarios.where('nombre').equals(nombre).first()) as Usuario | undefined
-    if (!usuario) {
-      usuario = {
-        id: uuidv4(),
-        nombre,
-        rol: 'USUARIO',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
-      await db.usuarios.add(usuario)
-    }
-
     const marcaDeTiempo = Date.now()
-    const prestamo: Prestamo = {
-      id: uuidv4(),
-      herramientaId: herramienta.id,
-      usuarioId: usuario.id,
-      proyectoId: proyectoId || undefined,
-      receptor: nombre,
-      fechaSalida: marcaDeTiempo,
-      fechaDevolucion: new Date(fechaDevolucion).getTime(),
-      estado: 'prestado',
-      createdAt: marcaDeTiempo,
-    }
 
-    await db.prestamos.add(prestamo)
-    await db.herramientas.update(herramienta.id, {
-      cantidad: herramienta.cantidad - 1,
-      disponible: herramienta.cantidad - 1 > 0,
-      updatedAt: marcaDeTiempo,
+    // UUID v4 generado ANTES de persistir (CONTEXTO.md, regla 3).
+    const nuevoUsuarioId = uuidv4()
+    const prestamoId = uuidv4()
+
+    // Transaccion unica: usuario + prestamo + stock se comitean juntos o nada (RNF-04).
+    await db.transaction('rw', db.usuarios, db.prestamos, db.herramientas, async () => {
+      let usuario = (await db.usuarios.where('nombre').equals(nombre).first()) as
+        | Usuario
+        | undefined
+
+      if (!usuario) {
+        usuario = {
+          id: nuevoUsuarioId,
+          nombre,
+          rol: 'USUARIO',
+          createdAt: marcaDeTiempo,
+          updatedAt: marcaDeTiempo,
+          syncStatus: 'pendiente',
+          syncIntentos: 0,
+        }
+        await db.usuarios.add(usuario)
+      }
+
+      const prestamo: Prestamo = {
+        id: prestamoId,
+        herramientaId: herramienta.id,
+        usuarioId: usuario.id,
+        proyectoId: proyectoId || undefined,
+        receptor: nombre,
+        fechaSalida: marcaDeTiempo,
+        fechaDevolucion: new Date(fechaDevolucion).getTime(),
+        estado: 'prestado',
+        createdAt: marcaDeTiempo,
+        // Entra a la cola de sincronizacion de inmediato.
+        syncStatus: 'pendiente',
+        syncIntentos: 0,
+      }
+
+      await db.prestamos.add(prestamo)
+      await db.herramientas.update(herramienta.id, {
+        cantidad: herramienta.cantidad - 1,
+        disponible: herramienta.cantidad - 1 > 0,
+        updatedAt: marcaDeTiempo,
+        syncStatus: 'pendiente',
+        syncIntentos: 0,
+      })
     })
 
-    console.log('Préstamo registrado:', prestamo)
+    console.log('Préstamo registrado y encolado:', prestamoId)
     window.alert('Préstamo registrado correctamente')
     setNombreRecibe('')
     setHerramientaId('')
@@ -110,6 +128,8 @@ function NuevoPrestamo() {
       nombre,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      syncStatus: 'pendiente',
+      syncIntentos: 0,
     }
 
     await db.proyectos.add(proyecto)

@@ -2,13 +2,14 @@ import { type ReactNode, useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import DashboardAdmin from './components/DashboardAdmin'
 import DashboardRecepcion from './components/DashboardRecepcion'
+import IndicadorSync from './components/IndicadorSync'
 import Login from './components/Login'
 import NuevoPrestamo from './components/NuevoPrestamo'
 import PanelUsuario from './components/PanelUsuario'
 import ReportesAdmin from './components/ReportesAdmin'
 import type { Rol } from './database/models'
 import { obtenerSesion } from './services/session'
-import { sincronizarUsuarios } from './services/syncService'
+import { iniciarOrquestador } from './services/syncOrchestrator'
 
 function ProtectedRoute({ roles, children }: { roles: Rol[]; children: ReactNode }) {
   const sesion = obtenerSesion()
@@ -34,13 +35,14 @@ function DefaultRedirect() {
 
 function App() {
   useEffect(() => {
-    sincronizarUsuarios()
-      .then(() => console.log('Sincronización de usuarios completada'))
-      .catch((err) => console.error('Error al sincronizar usuarios:', err))
+    // Escucha de red + polling con backoff. Nunca asume que hay internet.
+    return iniciarOrquestador()
   }, [])
 
   return (
     <HashRouter>
+      {/* Indicador global: visible en todas las rutas y para todos los roles. */}
+      <IndicadorSync />
       <Routes>
         <Route path="/" element={<DefaultRedirect />} />
         <Route path="/login" element={<Login />} />

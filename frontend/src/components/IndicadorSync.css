@@ -1,0 +1,77 @@
+.sync {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: calc(100vw - 1.5rem);
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #dfe3ec;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 12%);
+  font-size: 0.95rem;
+}
+
+.sync-punto {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #9aa3b5;
+}
+
+.sync--ok .sync-punto {
+  background: #2e9e5b;
+}
+
+.sync--sincronizando .sync-punto {
+  background: #4169e1;
+}
+
+.sync--error .sync-punto {
+  background: #d9822b;
+}
+
+.sync--sin-red .sync-punto {
+  background: #b7410e;
+}
+
+.sync--sin-red {
+  background: #fdeceb;
+  border-color: #f0b8b2;
+}
+
+.sync-texto {
+  font-weight: 700;
+  color: #2b3445;
+  white-space: nowrap;
+}
+
+.sync-badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #d9822b;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sync-boton {
+  padding: 0.4rem 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: #4169e1;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sync-boton:disabled {
+  background: #9aa3b5;
+  cursor: not-allowed;
+}

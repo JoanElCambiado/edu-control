@@ -43,6 +43,9 @@ function FormularioHerramienta() {
       disponible: true,
       createdAt: editandoCreatedAt ?? ahora,
       updatedAt: ahora,
+      // Toda alta o edicion vuelve a la cola de sincronizacion.
+      syncStatus: 'pendiente',
+      syncIntentos: 0,
     }
 
     if (editandoId) {

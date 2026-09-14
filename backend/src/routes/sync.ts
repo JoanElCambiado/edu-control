@@ -134,19 +134,38 @@ async function asegurarDependenciasPrestamo(
   return toDate(prestamo.fechaDevolucion ?? prestamo.fechaDevolucionEsperada) ?? new Date()
 }
 
-async function sincronizarPrestamos(
-  tx: Prisma.TransactionClient,
-  prestamos: SyncPrestamo[],
-): Promise<number> {
+interface ResultadoLote {
+  procesados: string[]
+  rechazados: Array<{ id: string; motivo: string }>
+}
+
+const motivo = (error: unknown) =>
+  error instanceof Error ? error.message : 'Error desconocido'
+
+/**
+ * Procesa cada prestamo en su propia transaccion: un registro invalido
+ * ya no bloquea el lote completo (la cola del cliente avanza igual).
+ */
+async function procesarPrestamos(prestamos: SyncPrestamo[]): Promise<ResultadoLote> {
+  const resultado: ResultadoLote = { procesados: [], rechazados: [] }
+
   for (const prestamo of prestamos) {
-    const fechaDevolucionEsperada = await asegurarDependenciasPrestamo(tx, prestamo)
-    await tx.prestamo.upsert({
-      where: { id: prestamo.id },
-      update: prestamoParaActualizar(prestamo, fechaDevolucionEsperada),
-      create: prestamoParaCrear(prestamo, fechaDevolucionEsperada),
-    })
+    try {
+      await prisma.$transaction(async (tx) => {
+        const fechaDevolucionEsperada = await asegurarDependenciasPrestamo(tx, prestamo)
+        await tx.prestamo.upsert({
+          where: { id: prestamo.id },
+          update: prestamoParaActualizar(prestamo, fechaDevolucionEsperada),
+          create: prestamoParaCrear(prestamo, fechaDevolucionEsperada),
+        })
+      })
+      resultado.procesados.push(prestamo.id)
+    } catch (error) {
+      resultado.rechazados.push({ id: prestamo.id, motivo: motivo(error) })
+    }
   }
-  return prestamos.length
+
+  return resultado
 }
 
 interface SyncHerramienta {
@@ -175,9 +194,11 @@ router.post('/herramientas', async (req, res) => {
     return
   }
 
-  const herramientas = await prisma.$transaction(
-    payload.map((h) =>
-      prisma.herramienta.upsert({
+  const resultado: ResultadoLote = { procesados: [], rechazados: [] }
+
+  for (const h of payload) {
+    try {
+      await prisma.herramienta.upsert({
         where: { id: h.id },
         update: {
           nombre: h.nombre,
@@ -185,7 +206,6 @@ router.post('/herramientas', async (req, res) => {
           estadoFisico: h.estadoFisico,
           cantidad: h.cantidad,
           disponible: h.disponible ?? true,
-          updatedAt: toDate(h.updatedAt) ?? new Date(),
         },
         create: {
           id: h.id,
@@ -195,13 +215,78 @@ router.post('/herramientas', async (req, res) => {
           cantidad: h.cantidad ?? 1,
           disponible: h.disponible ?? true,
           createdAt: toDate(h.createdAt) ?? new Date(),
-          updatedAt: toDate(h.updatedAt) ?? new Date(),
         },
-      }),
-    ),
-  )
+      })
+      resultado.procesados.push(h.id)
+    } catch (error) {
+      resultado.rechazados.push({ id: h.id, motivo: motivo(error) })
+    }
+  }
 
-  res.json({ herramientas: herramientas.length })
+  res.json(resultado)
+})
+
+router.post('/usuarios', async (req, res) => {
+  const payload = req.body as NonNullable<SyncPayload['usuarios']>
+
+  if (!Array.isArray(payload)) {
+    res.status(400).json({ error: 'El body debe ser un array de usuarios' })
+    return
+  }
+
+  const resultado: ResultadoLote = { procesados: [], rechazados: [] }
+
+  for (const u of payload) {
+    try {
+      const rol = ROLES.includes(u.rol) ? u.rol : 'USUARIO'
+      await prisma.usuario.upsert({
+        where: { id: u.id },
+        update: { nombre: u.nombre, rol },
+        create: {
+          id: u.id,
+          nombre: u.nombre,
+          rol,
+          createdAt: toDate(u.createdAt) ?? new Date(),
+        },
+      })
+      resultado.procesados.push(u.id)
+    } catch (error) {
+      resultado.rechazados.push({ id: u.id, motivo: motivo(error) })
+    }
+  }
+
+  res.json(resultado)
+})
+
+router.post('/proyectos', async (req, res) => {
+  const payload = req.body as NonNullable<SyncPayload['proyectos']>
+
+  if (!Array.isArray(payload)) {
+    res.status(400).json({ error: 'El body debe ser un array de proyectos' })
+    return
+  }
+
+  const resultado: ResultadoLote = { procesados: [], rechazados: [] }
+
+  for (const p of payload) {
+    try {
+      await prisma.proyecto.upsert({
+        where: { id: p.id },
+        update: { nombre: p.nombre, descripcion: p.descripcion },
+        create: {
+          id: p.id,
+          nombre: p.nombre,
+          descripcion: p.descripcion,
+          createdAt: toDate(p.createdAt) ?? new Date(),
+        },
+      })
+      resultado.procesados.push(p.id)
+    } catch (error) {
+      resultado.rechazados.push({ id: p.id, motivo: motivo(error) })
+    }
+  }
+
+  res.json(resultado)
 })
 
 router.post('/prestamos', async (req, res) => {
@@ -212,16 +297,7 @@ router.post('/prestamos', async (req, res) => {
     return
   }
 
-  try {
-    const procesados = await prisma.$transaction((tx) => sincronizarPrestamos(tx, payload))
-    res.json({ prestamos: procesados })
-  } catch (error) {
-    if (error instanceof SyncValidationError) {
-      res.status(400).json({ error: error.message })
-      return
-    }
-    throw error
-  }
+  res.json(await procesarPrestamos(payload))
 })
 
 router.post('/', async (req, res) => {
@@ -295,24 +371,14 @@ router.post('/', async (req, res) => {
     ),
   )
 
-  let prestamos = 0
-  try {
-    prestamos = await prisma.$transaction((tx) =>
-      sincronizarPrestamos(tx, (payload.prestamos ?? []) as SyncPrestamo[]),
-    )
-  } catch (error) {
-    if (error instanceof SyncValidationError) {
-      res.status(400).json({ error: error.message })
-      return
-    }
-    throw error
-  }
+  const resultadoPrestamos = await procesarPrestamos((payload.prestamos ?? []) as SyncPrestamo[])
 
   res.json({
     usuarios: usuarios.length,
     herramientas: herramientas.length,
     proyectos: proyectos.length,
-    prestamos,
+    prestamos: resultadoPrestamos.procesados.length,
+    rechazados: resultadoPrestamos.rechazados,
   })
 })
 

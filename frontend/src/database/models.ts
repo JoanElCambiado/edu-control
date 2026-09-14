@@ -2,7 +2,20 @@ export type Rol = 'ADMINISTRADOR' | 'RECEPCION' | 'USUARIO'
 
 export type EstadoPrestamo = 'prestado' | 'devuelto' | 'atrasado'
 
-export interface Usuario {
+/** Estado de un registro dentro de la cola de sincronizacion (outbox por fila). */
+export type SyncStatus = 'pendiente' | 'enviado' | 'error'
+
+/** Entidades que participan en la cola, en orden de dependencia. */
+export type EntidadSync = 'herramientas' | 'usuarios' | 'proyectos' | 'prestamos'
+
+/** Metadatos de cola que toda entidad sincronizable debe exponer. */
+export interface SyncMeta {
+  syncStatus: SyncStatus
+  syncIntentos?: number
+  syncError?: string
+}
+
+export interface Usuario extends SyncMeta {
   id: string
   nombre: string
   rol: Rol
@@ -13,7 +26,7 @@ export interface Usuario {
 
 export type EstadoFisico = 'excelente' | 'bueno' | 'regular' | 'mantenimiento'
 
-export interface Herramienta {
+export interface Herramienta extends SyncMeta {
   id: string
   nombre: string
   categoria: string
@@ -24,7 +37,7 @@ export interface Herramienta {
   updatedAt: number
 }
 
-export interface Proyecto {
+export interface Proyecto extends SyncMeta {
   id: string
   nombre: string
   descripcion?: string
@@ -32,7 +45,7 @@ export interface Proyecto {
   updatedAt: number
 }
 
-export interface Prestamo {
+export interface Prestamo extends SyncMeta {
   id: string
   herramientaId: string
   usuarioId: string
