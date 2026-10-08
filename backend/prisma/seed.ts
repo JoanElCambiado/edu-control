@@ -5,6 +5,7 @@ const prisma = new PrismaClient()
 
 interface SeedUsuario {
   id: string
+  documento: string
   nombre: string
   rol: Rol
   contrasena: string
@@ -13,18 +14,21 @@ interface SeedUsuario {
 const usuarios: SeedUsuario[] = [
   {
     id: '10000000-0000-4000-8000-000000000001',
+    documento: '1070000001',
     nombre: 'Elena Torres',
     rol: 'ADMINISTRADOR',
     contrasena: '1234',
   },
   {
     id: '10000000-0000-4000-8000-000000000002',
+    documento: '1070000002',
     nombre: 'Carlos Méndez',
     rol: 'RECEPCION',
     contrasena: '1234',
   },
   {
     id: '10000000-0000-4000-8000-000000000003',
+    documento: '1070000003',
     nombre: 'Luis Pérez',
     rol: 'USUARIO',
     contrasena: '1234',
@@ -35,8 +39,14 @@ async function main() {
   for (const u of usuarios) {
     await prisma.usuario.upsert({
       where: { id: u.id },
-      update: { nombre: u.nombre, rol: u.rol, contrasena: u.contrasena },
-      create: { id: u.id, nombre: u.nombre, rol: u.rol, contrasena: u.contrasena },
+      update: { documento: u.documento, nombre: u.nombre, rol: u.rol, contrasena: u.contrasena },
+      create: {
+        id: u.id,
+        documento: u.documento,
+        nombre: u.nombre,
+        rol: u.rol,
+        contrasena: u.contrasena,
+      },
     })
   }
 

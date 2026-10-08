@@ -10,6 +10,7 @@ import './NuevoPrestamo.css'
 function NuevoPrestamo() {
   const sesion = obtenerSesion()
   const navigate = useNavigate()
+  const [documentoRecibe, setDocumentoRecibe] = useState('')
   const [nombreRecibe, setNombreRecibe] = useState('')
   const [herramientaId, setHerramientaId] = useState('')
   const [proyectoId, setProyectoId] = useState('')
@@ -31,6 +32,13 @@ function NuevoPrestamo() {
     return todos.sort((a, b) => a.nombre.localeCompare(b.nombre))
   }, [])
 
+  // Resuelve el titular por su clave natural mientras se escribe el documento.
+  const usuarioEncontrado = useLiveQuery(async () => {
+    const doc = documentoRecibe.trim()
+    if (doc.length === 0) return null
+    return (await db.usuarios.where('documento').equals(doc).first()) ?? null
+  }, [documentoRecibe])
+
   const esAdministrador = sesion?.rol === 'ADMINISTRADOR'
 
   const ahora = new Date()
@@ -50,6 +58,12 @@ function NuevoPrestamo() {
       return
     }
 
+    const documento = documentoRecibe.trim()
+    if (documento.length === 0) {
+      setError('Escribe el documento de quien recibe la herramienta')
+      return
+    }
+
     const nombre = nombreRecibe.trim()
     const marcaDeTiempo = Date.now()
 
@@ -57,52 +71,74 @@ function NuevoPrestamo() {
     const nuevoUsuarioId = uuidv4()
     const prestamoId = uuidv4()
 
-    // Transaccion unica: usuario + prestamo + stock se comitean juntos o nada (RNF-04).
-    await db.transaction('rw', db.usuarios, db.prestamos, db.herramientas, async () => {
-      let usuario = (await db.usuarios.where('nombre').equals(nombre).first()) as
-        | Usuario
-        | undefined
+    try {
+      // Transaccion unica: usuario + prestamo + stock se comitean juntos o nada (RNF-04).
+      await db.transaction('rw', db.usuarios, db.prestamos, db.herramientas, async () => {
+        // Identificacion por clave natural exacta, nunca por nombre (§3.5).
+        let usuario = (await db.usuarios.where('documento').equals(documento).first()) as
+          | Usuario
+          | undefined
 
-      if (!usuario) {
-        usuario = {
-          id: nuevoUsuarioId,
-          nombre,
-          rol: 'USUARIO',
+        if (!usuario) {
+          if (nombre.length === 0) {
+            throw new Error(
+              'El documento no está registrado. Escribe el nombre completo para crear el titular.',
+            )
+          }
+          usuario = {
+            id: nuevoUsuarioId,
+            documento,
+            nombre,
+            rol: 'USUARIO',
+            createdAt: marcaDeTiempo,
+            updatedAt: marcaDeTiempo,
+            syncStatus: 'pendiente',
+            syncIntentos: 0,
+          }
+          await db.usuarios.add(usuario)
+        } else if (nombre.length > 0 && nombre !== usuario.nombre) {
+          // El documento manda: el nombre solo se corrige sobre el titular existente.
+          await db.usuarios.update(usuario.id, {
+            nombre,
+            updatedAt: marcaDeTiempo,
+            syncStatus: 'pendiente',
+            syncIntentos: 0,
+          })
+        }
+
+        const prestamo: Prestamo = {
+          id: prestamoId,
+          herramientaId: herramienta.id,
+          // Unica referencia al receptor: `receptor` se eliminó por 3NF (§3.3).
+          usuarioId: usuario.id,
+          proyectoId: proyectoId || undefined,
+          fechaSalida: marcaDeTiempo,
+          fechaDevolucion: new Date(fechaDevolucion).getTime(),
+          estado: 'prestado',
           createdAt: marcaDeTiempo,
-          updatedAt: marcaDeTiempo,
+          // Entra a la cola de sincronizacion de inmediato.
           syncStatus: 'pendiente',
           syncIntentos: 0,
         }
-        await db.usuarios.add(usuario)
-      }
 
-      const prestamo: Prestamo = {
-        id: prestamoId,
-        herramientaId: herramienta.id,
-        usuarioId: usuario.id,
-        proyectoId: proyectoId || undefined,
-        receptor: nombre,
-        fechaSalida: marcaDeTiempo,
-        fechaDevolucion: new Date(fechaDevolucion).getTime(),
-        estado: 'prestado',
-        createdAt: marcaDeTiempo,
-        // Entra a la cola de sincronizacion de inmediato.
-        syncStatus: 'pendiente',
-        syncIntentos: 0,
-      }
-
-      await db.prestamos.add(prestamo)
-      await db.herramientas.update(herramienta.id, {
-        cantidad: herramienta.cantidad - 1,
-        disponible: herramienta.cantidad - 1 > 0,
-        updatedAt: marcaDeTiempo,
-        syncStatus: 'pendiente',
-        syncIntentos: 0,
+        await db.prestamos.add(prestamo)
+        await db.herramientas.update(herramienta.id, {
+          cantidad: herramienta.cantidad - 1,
+          disponible: herramienta.cantidad - 1 > 0,
+          updatedAt: marcaDeTiempo,
+          syncStatus: 'pendiente',
+          syncIntentos: 0,
+        })
       })
-    })
+    } catch (err) {
+      console.error('Error al registrar el préstamo:', err)
+      setError(err instanceof Error ? err.message : 'No se pudo registrar el préstamo')
+      return
+    }
 
     console.log('Préstamo registrado y encolado:', prestamoId)
     window.alert('Préstamo registrado correctamente')
+    setDocumentoRecibe('')
     setNombreRecibe('')
     setHerramientaId('')
     setProyectoId('')
@@ -173,8 +209,39 @@ function NuevoPrestamo() {
 
         <form className="prestamo-form" onSubmit={handleSubmit}>
           <div className="prestamo-field">
+            <label className="prestamo-label" htmlFor="prestamo-documento">
+              Documento de quien recibe la herramienta
+            </label>
+            <input
+              className="prestamo-input"
+              id="prestamo-documento"
+              name="documentoRecibe"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              autoFocus
+              required
+              placeholder="Ej: 1070000003"
+              value={documentoRecibe}
+              onChange={(e) => {
+                setDocumentoRecibe(e.target.value)
+                if (error) setError('')
+              }}
+            />
+            {usuarioEncontrado ? (
+              <p className="prestamo-placeholder">
+                Titular: <strong>{usuarioEncontrado.nombre}</strong>
+              </p>
+            ) : documentoRecibe.trim().length > 0 ? (
+              <p className="prestamo-placeholder">
+                Documento nuevo. Escribe el nombre para registrar al titular.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="prestamo-field">
             <label className="prestamo-label" htmlFor="prestamo-nombre">
-              Nombre de quien recibe la herramienta
+              Nombre completo {usuarioEncontrado ? '(opcional, para corregir)' : ''}
             </label>
             <input
               className="prestamo-input"
@@ -182,7 +249,8 @@ function NuevoPrestamo() {
               name="nombreRecibe"
               type="text"
               autoComplete="off"
-              required
+              required={!usuarioEncontrado}
+              placeholder={usuarioEncontrado?.nombre ?? 'Ej: Luis Pérez'}
               value={nombreRecibe}
               onChange={(e) => setNombreRecibe(e.target.value)}
             />

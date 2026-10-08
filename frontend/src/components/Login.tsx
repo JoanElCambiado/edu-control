@@ -35,9 +35,15 @@ function Login() {
     if (error) setError('')
   }
 
-  /** Búsqueda local insensible a mayúsculas/minúsculas. */
-  const buscarUsuario = (nombre: string) =>
-    db.usuarios.where('nombre').equalsIgnoreCase(nombre).first() as Promise<Usuario | undefined>
+  /**
+   * Resuelve el actor por su clave natural (documento) y, como respaldo
+   * de compatibilidad, por nombre insensible a mayúsculas.
+   */
+  const buscarUsuario = async (credencial: string): Promise<Usuario | undefined> => {
+    const porDocumento = await db.usuarios.where('documento').equals(credencial).first()
+    if (porDocumento) return porDocumento
+    return db.usuarios.where('nombre').equalsIgnoreCase(credencial).first()
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -52,7 +58,7 @@ function Login() {
 
       let encontrado = await buscarUsuario(nombre)
 
-      // Usuario desconocido en local: puede ser nuevo en la nube. Se reintenta una vez.
+      // Credencial desconocida en local: puede ser nueva en la nube. Se reintenta una vez.
       if (!encontrado && hayRed()) {
         await asegurarUsuariosLocales(true)
         encontrado = await buscarUsuario(nombre)
@@ -99,7 +105,7 @@ function Login() {
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-field">
             <label className="login-label" htmlFor="usuario">
-              Usuario
+              Documento o usuario
             </label>
             <input
               className="login-input"
@@ -109,7 +115,7 @@ function Login() {
               autoComplete="username"
               autoFocus
               required
-              placeholder="Ej: Elena Torres"
+              placeholder="Ej: 1070000001 o Elena Torres"
               value={usuario}
               onChange={handleUsuarioChange}
             />

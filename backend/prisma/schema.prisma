@@ -22,6 +22,9 @@ enum EstadoPrestamo {
 /// Usuario que solicita herramientas en préstamo.
 model Usuario {
   id         String       @id @default(uuid()) @db.Uuid
+  /// Clave natural del actor. Resuelve §3.5: garantiza identidad única
+  /// y determinista entre dispositivos durante la sincronización.
+  documento  String       @unique
   nombre     String
   rol        Rol
   contrasena String?
@@ -29,6 +32,7 @@ model Usuario {
   updatedAt  DateTime     @updatedAt @map("updated_at")
   prestamos  Prestamo[]
 
+  @@index([nombre])
   @@map("usuarios")
 }
 

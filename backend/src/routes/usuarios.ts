@@ -27,20 +27,29 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { nombre, rol } = req.body
+  const { documento, nombre, rol } = req.body
+  if (typeof documento !== 'string' || documento.trim().length === 0) {
+    res.status(400).json({ error: 'documento es obligatorio y debe ser único' })
+    return
+  }
   if (typeof nombre !== 'string' || !isRol(rol)) {
     res.status(400).json({ error: 'nombre y rol (ADMINISTRADOR | RECEPCION | USUARIO) son obligatorios' })
     return
   }
-  const usuario = await prisma.usuario.create({ data: { nombre, rol } })
+  const usuario = await prisma.usuario.create({
+    data: { documento: documento.trim(), nombre, rol },
+  })
   res.status(201).json(usuario)
 })
 
 router.put('/:id', async (req, res) => {
-  const { nombre, rol } = req.body
+  const { documento, nombre, rol } = req.body
   const usuario = await prisma.usuario.update({
     where: { id: req.params.id },
     data: {
+      ...(typeof documento === 'string' && documento.trim().length > 0 && {
+        documento: documento.trim(),
+      }),
       ...(typeof nombre === 'string' && { nombre }),
       ...(isRol(rol) && { rol }),
     },

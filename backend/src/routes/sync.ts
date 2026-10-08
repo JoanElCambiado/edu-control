@@ -8,7 +8,14 @@ const ESTADOS: EstadoPrestamo[] = ['prestado', 'devuelto', 'atrasado']
 const router = Router()
 
 interface SyncPayload {
-  usuarios?: Array<{ id: string; nombre: string; rol: Rol; createdAt?: string | Date; updatedAt?: string | Date }>
+  usuarios?: Array<{
+    id: string
+    documento: string
+    nombre: string
+    rol: Rol
+    createdAt?: string | Date
+    updatedAt?: string | Date
+  }>
   herramientas?: Array<{
     id: string
     nombre: string
@@ -37,7 +44,6 @@ interface SyncPayload {
     fechaDevolucion?: string | number | Date
     fechaDevolucionReal?: string | number | Date | null
     estado?: EstadoPrestamo
-    receptor?: string
     createdAt?: string | number | Date
   }>
 }
@@ -57,7 +63,6 @@ interface SyncPrestamo {
   fechaDevolucion?: string | number | Date
   fechaDevolucionReal?: string | number | Date | null
   estado?: EstadoPrestamo
-  receptor?: string
   createdAt?: string | number | Date
 }
 
@@ -84,6 +89,11 @@ const prestamoParaCrear = (p: SyncPrestamo, fechaDevolucionEsperada: Date) => ({
   createdAt: toDate(p.createdAt) ?? new Date(),
 })
 
+/**
+ * Valida que existan las dependencias del préstamo. Ya NO materializa usuarios
+ * a partir de `receptor` (§3.3): el préstamo depende exclusivamente de `usuarioId`
+ * y la cola garantiza que los usuarios se envían antes que los préstamos.
+ */
 async function asegurarDependenciasPrestamo(
   tx: Prisma.TransactionClient,
   prestamo: SyncPrestamo,
@@ -93,20 +103,9 @@ async function asegurarDependenciasPrestamo(
     select: { id: true },
   })
   if (!usuario) {
-    if (!prestamo.receptor) {
-      throw new SyncValidationError(
-        `Préstamo ${prestamo.id}: el usuario ${prestamo.usuarioId} no existe en la nube y falta el receptor para crearlo`,
-      )
-    }
-    await tx.usuario.create({
-      data: {
-        id: prestamo.usuarioId,
-        nombre: prestamo.receptor,
-        rol: 'USUARIO',
-        createdAt: toDate(prestamo.fechaSalida) ?? new Date(),
-        updatedAt: toDate(prestamo.fechaSalida) ?? new Date(),
-      },
-    })
+    throw new SyncValidationError(
+      `Préstamo ${prestamo.id}: el usuario ${prestamo.usuarioId} no existe en la nube; sincronice primero los usuarios`,
+    )
   }
 
   const herramienta = await tx.herramienta.findUnique({
@@ -239,16 +238,36 @@ router.post('/usuarios', async (req, res) => {
   for (const u of payload) {
     try {
       const rol = ROLES.includes(u.rol) ? u.rol : 'USUARIO'
-      await prisma.usuario.upsert({
-        where: { id: u.id },
-        update: { nombre: u.nombre, rol },
-        create: {
-          id: u.id,
-          nombre: u.nombre,
-          rol,
-          createdAt: toDate(u.createdAt) ?? new Date(),
-        },
+      if (typeof u.documento !== 'string' || u.documento.trim().length === 0) {
+        throw new Error('El documento es obligatorio y es la clave natural del usuario')
+      }
+      const documento = u.documento.trim()
+
+      // Upsert por `documento` (clave natural) para que dos dispositivos que
+      // registren a la misma persona offline converjan en un solo usuario (§3.5).
+      const existentePorDocumento = await prisma.usuario.findUnique({
+        where: { documento },
+        select: { id: true },
       })
+
+      if (existentePorDocumento && existentePorDocumento.id !== u.id) {
+        await prisma.usuario.update({
+          where: { documento },
+          data: { nombre: u.nombre, rol },
+        })
+      } else {
+        await prisma.usuario.upsert({
+          where: { id: u.id },
+          update: { documento, nombre: u.nombre, rol },
+          create: {
+            id: u.id,
+            documento,
+            nombre: u.nombre,
+            rol,
+            createdAt: toDate(u.createdAt) ?? new Date(),
+          },
+        })
+      }
       resultado.procesados.push(u.id)
     } catch (error) {
       resultado.rechazados.push({ id: u.id, motivo: motivo(error) })
@@ -306,18 +325,17 @@ router.post('/', async (req, res) => {
   const usuarios = await prisma.$transaction(
     (payload.usuarios ?? []).map((u) =>
       prisma.usuario.upsert({
-        where: { id: u.id },
+        where: { documento: u.documento },
         update: {
           nombre: u.nombre,
           rol: ROLES.includes(u.rol) ? u.rol : 'USUARIO',
-          updatedAt: toDate(u.updatedAt) ?? new Date(),
         },
         create: {
           id: u.id,
+          documento: u.documento,
           nombre: u.nombre,
           rol: ROLES.includes(u.rol) ? u.rol : 'USUARIO',
           createdAt: toDate(u.createdAt) ?? new Date(),
-          updatedAt: toDate(u.updatedAt) ?? new Date(),
         },
       }),
     ),

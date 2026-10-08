@@ -17,6 +17,8 @@ export interface SyncMeta {
 
 export interface Usuario extends SyncMeta {
   id: string
+  /** Clave natural del actor. Índice único en Dexie (&documento). §3.5 */
+  documento: string
   nombre: string
   rol: Rol
   contrasena?: string
@@ -48,8 +50,8 @@ export interface Proyecto extends SyncMeta {
 export interface Prestamo extends SyncMeta {
   id: string
   herramientaId: string
+  /** Única referencia al receptor. `receptor` se eliminó por redundancia 3NF (§3.3). */
   usuarioId: string
-  receptor: string
   proyectoId?: string
   fechaSalida: number
   fechaDevolucion: number

@@ -12,14 +12,32 @@ function ReportesAdmin() {
   const navigate = useNavigate()
 
   const reporte = useLiveQuery(async () => {
-    const [prestamos, herramientas] = await Promise.all([
+    const [prestamos, herramientas, usuarios] = await Promise.all([
       db.prestamos.toArray(),
       db.herramientas.toArray(),
+      db.usuarios.toArray(),
     ])
 
     const prestamosActivos = prestamos.filter((prestamo) => prestamo.estado === 'prestado')
 
-    const morosos = prestamosActivos.filter((prestamo) => prestamo.fechaDevolucion < Date.now())
+    // JOIN local por usuarioId: ya no se lee el campo redundante `receptor` (§3.3).
+    const titulares = new Map(
+      usuarios.map((usuario) => [
+        usuario.id,
+        { nombre: usuario.nombre, documento: usuario.documento },
+      ]),
+    )
+
+    const morosos = prestamosActivos
+      .filter((prestamo) => prestamo.fechaDevolucion < Date.now())
+      .map((prestamo) => {
+        const titular = titulares.get(prestamo.usuarioId)
+        return {
+          id: prestamo.id,
+          nombre: titular?.nombre ?? 'Usuario no encontrado',
+          documento: titular?.documento ?? 'sin documento',
+        }
+      })
 
     const conteoPorHerramienta = new Map<string, number>()
     for (const prestamo of prestamos) {
@@ -100,9 +118,9 @@ function ReportesAdmin() {
             {!cargando && (morosos.length > 0 ? (
               <>
                 <ul className="reportes-list">
-                  {morosos.slice(0, LIMITE_MOROSOS).map((prestamo) => (
-                    <li className="reportes-item" key={prestamo.id}>
-                      {prestamo.receptor}
+                  {morosos.slice(0, LIMITE_MOROSOS).map((moroso) => (
+                    <li className="reportes-item" key={moroso.id}>
+                      {moroso.nombre} · {moroso.documento}
                     </li>
                   ))}
                 </ul>

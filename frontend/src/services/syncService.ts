@@ -26,6 +26,7 @@ type FilaSync = SyncMeta & { id: string }
 
 interface ApiUsuario {
   id: string
+  documento: string
   nombre: string
   rol: Usuario['rol']
   contrasena?: string
@@ -215,6 +216,7 @@ export async function sincronizarUsuarios(): Promise<number> {
     for (const u of data) {
       const remoto: Usuario = {
         id: u.id,
+        documento: u.documento,
         nombre: u.nombre,
         rol: u.rol,
         contrasena: u.contrasena,
@@ -222,6 +224,13 @@ export async function sincronizarUsuarios(): Promise<number> {
         updatedAt: new Date(u.updatedAt).getTime(),
         syncStatus: 'enviado',
         syncIntentos: 0,
+      }
+
+      // La clave natural manda: si el documento ya existe con otro UUID local,
+      // se elimina el duplicado antes de insertar el registro de la nube (§3.5).
+      const duplicado = await db.usuarios.where('documento').equals(u.documento).first()
+      if (duplicado && duplicado.id !== u.id) {
+        await db.usuarios.delete(duplicado.id)
       }
 
       const local = await db.usuarios.get(u.id)
