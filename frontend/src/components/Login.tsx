@@ -1,18 +1,33 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../database/db'
-import type { Usuario } from '../database/models'
+import type { Rol, Usuario } from '../database/models'
+import { useI18n } from '../i18n'
 import { guardarSesion } from '../services/session'
 import { asegurarUsuariosLocales, hayRed } from '../services/syncService'
+import { registrarParEnBoveda, tokenizar } from '../services/tokenVault'
 import { validarUsuario } from '../utils/validations'
 import './Login.css'
+
+const API_BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api') as string
+
+interface RespuestaLoginJwt {
+  token: string
+  usuario: {
+    id: string
+    nombre: string
+    rol: Rol
+    documentoToken: string
+  }
+}
 
 function Login() {
   const [usuario, setUsuario] = useState('')
   const [contrasena, setContrasena] = useState('')
-  const [error, setError] = useState('')
+  const [errorKey, setErrorKey] = useState('')
   const [cargando, setCargando] = useState(false)
   const navigate = useNavigate()
+  const { t, dir } = useI18n()
 
   const usuarioInvalido = usuario.length > 0 && !validarUsuario(usuario)
 
@@ -22,7 +37,7 @@ function Login() {
     let activo = true
     void asegurarUsuariosLocales().then((total) => {
       if (activo && total === 0 && !hayRed()) {
-        setError('No hay usuarios guardados en este dispositivo. Conéctese una vez para descargarlos.')
+        setErrorKey('auth.noLocalUsersOffline')
       }
     })
     return () => {
@@ -32,7 +47,7 @@ function Login() {
 
   const handleUsuarioChange = (event: ChangeEvent<HTMLInputElement>) => {
     setUsuario(event.target.value)
-    if (error) setError('')
+    if (errorKey) setErrorKey('')
   }
 
   /**
@@ -47,7 +62,7 @@ function Login() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError('')
+    setErrorKey('')
     setCargando(true)
 
     try {
@@ -66,20 +81,49 @@ function Login() {
 
       if (!encontrado) {
         const total = await db.usuarios.count()
-        setError(
-          total === 0
-            ? 'No hay usuarios en este dispositivo. Conéctese a internet para descargarlos.'
-            : 'Credenciales incorrectas',
-        )
+        setErrorKey(total === 0 ? 'auth.noLocalUsersConnect' : 'auth.invalidCredentials')
         return
       }
 
       if (encontrado.contrasena !== contrasena) {
-        setError('Credenciales incorrectas')
+        setErrorKey('auth.invalidCredentials')
         return
       }
 
-      guardarSesion({ id: encontrado.id, nombre: encontrado.nombre, rol: encontrado.rol })
+      let documentoToken = tokenizar(encontrado.documento)
+      let jwtToken: string | undefined
+
+      if (hayRed()) {
+        try {
+          const respuesta = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              usuario: encontrado.documento,
+              contrasena,
+            }),
+          })
+
+          if (respuesta.ok) {
+            const datosJwt = (await respuesta.json()) as RespuestaLoginJwt
+            jwtToken = datosJwt.token
+            if (datosJwt.usuario?.documentoToken) {
+              documentoToken = datosJwt.usuario.documentoToken
+              registrarParEnBoveda(documentoToken, encontrado.documento)
+            }
+          }
+        } catch {
+          // Si el backend no responde, se mantiene intacto el flujo offline-first con Dexie
+        }
+      }
+
+      guardarSesion({
+        id: encontrado.id,
+        nombre: encontrado.nombre,
+        rol: encontrado.rol,
+        token: jwtToken,
+        documentoToken,
+      })
 
       if (encontrado.rol === 'ADMINISTRADOR') {
         navigate('/dashboard')
@@ -90,22 +134,22 @@ function Login() {
       }
     } catch (err) {
       console.error('Error al iniciar sesión:', err)
-      setError('No se pudo validar el acceso. Intente de nuevo.')
+      setErrorKey('auth.accessValidationError')
     } finally {
       setCargando(false)
     }
   }
 
   return (
-    <main className="login">
+    <main className="login" dir={dir}>
       <section className="login-card">
-        <h1 className="login-title">Edu Control</h1>
-        <p className="login-subtitle">Ingrese sus datos para continuar</p>
+        <h1 className="login-title">{t('auth.title')}</h1>
+        <p className="login-subtitle">{t('auth.subtitle')}</p>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-field">
             <label className="login-label" htmlFor="usuario">
-              Documento o usuario
+              {t('auth.usernameLabel')}
             </label>
             <input
               className="login-input"
@@ -115,20 +159,18 @@ function Login() {
               autoComplete="username"
               autoFocus
               required
-              placeholder="Ej: 1070000001 o Elena Torres"
+              placeholder={t('auth.usernamePlaceholder')}
               value={usuario}
               onChange={handleUsuarioChange}
             />
             {usuarioInvalido && (
-              <p className="login-error">
-                Solo letras, números, espacios y los signos . - _
-              </p>
+              <p className="login-error">{t('auth.usernameValidation')}</p>
             )}
           </div>
 
           <div className="login-field">
             <label className="login-label" htmlFor="contrasena">
-              Contraseña
+              {t('auth.passwordLabel')}
             </label>
             <input
               className="login-input"
@@ -142,10 +184,10 @@ function Login() {
             />
           </div>
 
-          {error && <p className="login-error">{error}</p>}
+          {errorKey && <p className="login-error">{t(errorKey)}</p>}
 
           <button className="login-button" type="submit" disabled={usuarioInvalido || cargando}>
-            {cargando ? 'Verificando…' : 'Entrar'}
+            {cargando ? t('auth.verifying') : t('auth.submit')}
           </button>
         </form>
       </section>

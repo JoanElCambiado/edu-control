@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "code": "es-CO",
+    "name": "Español (Colombia)",
+    "currency": "COP",
+    "direction": "ltr"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "title": "Edu Control",
+    "subtitle": "Ingrese sus datos para continuar",
+    "usernameLabel": "Documento o usuario",
+    "usernamePlaceholder": "Ej: 1070000001 o Elena Torres",
+    "usernameValidation": "Solo letras, números, espacios y los signos . - _",
+    "passwordLabel": "Contraseña",
+    "submit": "Entrar",
+    "verifying": "Verificando…",
+    "logout": "Cerrar Sesión",
+    "logoutConfirm": "¿Desea cerrar sesión?",
+    "invalidCredentials": "Credenciales incorrectas",
+    "noLocalUsersOffline": "No hay usuarios guardados en este dispositivo. Conéctese una vez para descargarlos.",
+    "noLocalUsersConnect": "No hay usuarios en este dispositivo. Conéctese a internet para descargarlos.",
+    "accessValidationError": "No se pudo validar el acceso. Intente de nuevo."
+  },
+  "loans": {
+    "title": "Gestión de Préstamos",
+    "newLoan": "Nuevo Préstamo",
+    "activeLoans": "Préstamos Activos",
+    "activeLoansDetail": "Préstamos en curso en este momento",
+    "overdueUsers": "Usuarios morosos",
+    "noOverdueUsers": "Sin usuarios morosos",
+    "returnDate": "Fecha de devolución esperada",
+    "replacementPenalty": "Costo de reposición estimado",
+    "pendingCount": {
+      "zero": "Sin préstamos pendientes por sincronizar",
+      "one": "{{count}} préstamo sin enviar",
+      "other": "{{count}} préstamos sin enviar"
+    },
+    "itemsCount": {
+      "zero": "0 préstamos registrados",
+      "one": "{{count}} préstamo registrado",
+      "other": "{{count}} préstamos registrados"
+    }
+  },
+  "inventory": {
+    "title": "Catálogo de Herramientas",
+    "status": "Estado del inventario",
+    "available": "Disponible",
+    "unavailable": "No disponible",
+    "condition": {
+      "excelente": "Excelente",
+      "bueno": "Bueno",
+      "regular": "Regular",
+      "mantenimiento": "En mantenimiento"
+    },
+    "topTools": "Herramientas más prestadas",
+    "unitsCount": {
+      "zero": "Sin unidades disponibles",
+      "one": "{{count}} unidad disponible",
+      "other": "{{count}} unidades disponibles"
+    }
+  },
+  "sync": {
+    "onlineUpToDate": "Datos al día",
+    "offline": "Sin conexión",
+    "syncing": "Sincronizando...",
+    "pendingSend": "Pendiente de enviar",
+    "sendNow": "Enviar ahora",
+    "autoSendHint": "Se enviará automáticamente al volver la conexión"
+  },
+  "locale": {
+    "label": "Idioma y región",
+    "es-CO": "Español (Colombia)",
+    "en-US": "English (United States)",
+    "ar-SA": "العربية (المملكة العربية السعودية)"
+  }
+}
+

@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "code": "en-US",
+    "name": "English (United States)",
+    "currency": "USD",
+    "direction": "ltr"
+  },
+  "auth": {
+    "login": "Sign In",
+    "title": "Edu Control",
+    "subtitle": "Enter your credentials to continue",
+    "usernameLabel": "Document ID or username",
+    "usernamePlaceholder": "Ex: 1070000001 or Elena Torres",
+    "usernameValidation": "Only letters, numbers, spaces, and . - _ characters",
+    "passwordLabel": "Password",
+    "submit": "Sign In",
+    "verifying": "Verifying…",
+    "logout": "Sign Out",
+    "logoutConfirm": "Do you want to sign out?",
+    "invalidCredentials": "Invalid credentials",
+    "noLocalUsersOffline": "No users stored on this device. Connect once to download them.",
+    "noLocalUsersConnect": "No users on this device. Connect to the internet to download them.",
+    "accessValidationError": "Could not validate access. Please try again."
+  },
+  "loans": {
+    "title": "Loan Management",
+    "newLoan": "New Loan",
+    "activeLoans": "Active Loans",
+    "activeLoansDetail": "Loans currently in progress",
+    "overdueUsers": "Overdue Users",
+    "noOverdueUsers": "No overdue users",
+    "returnDate": "Expected return date",
+    "replacementPenalty": "Estimated replacement fee",
+    "pendingCount": {
+      "zero": "No pending loans to sync",
+      "one": "{{count}} unsent loan",
+      "other": "{{count}} unsent loans"
+    },
+    "itemsCount": {
+      "zero": "0 recorded loans",
+      "one": "{{count}} recorded loan",
+      "other": "{{count}} recorded loans"
+    }
+  },
+  "inventory": {
+    "title": "Tool Catalog",
+    "status": "Inventory status",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "condition": {
+      "excelente": "Excellent",
+      "bueno": "Good",
+      "regular": "Fair",
+      "mantenimiento": "Under maintenance"
+    },
+    "topTools": "Most Borrowed Tools",
+    "unitsCount": {
+      "zero": "No units available",
+      "one": "{{count}} unit available",
+      "other": "{{count}} units available"
+    }
+  },
+  "sync": {
+    "onlineUpToDate": "All data synced",
+    "offline": "Offline",
+    "syncing": "Syncing...",
+    "pendingSend": "Pending upload",
+    "sendNow": "Sync now",
+    "autoSendHint": "Will automatically sync once connection is restored"
+  },
+  "locale": {
+    "label": "Language & Region",
+    "es-CO": "Español (Colombia)",
+    "en-US": "English (United States)",
+    "ar-SA": "العربية (المملكة العربية السعودية)"
+  }
+}
+

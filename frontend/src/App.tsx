@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import DashboardAdmin from './components/DashboardAdmin'
 import DashboardRecepcion from './components/DashboardRecepcion'
 import IndicadorSync from './components/IndicadorSync'
+import LocaleSwitcher from './components/LocaleSwitcher'
 import Login from './components/Login'
 import NuevoPrestamo from './components/NuevoPrestamo'
 import PanelUsuario from './components/PanelUsuario'
@@ -43,6 +44,17 @@ function App() {
     <HashRouter>
       {/* Indicador global: visible en todas las rutas y para todos los roles. */}
       <IndicadorSync />
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: '0.5rem 1rem',
+          backgroundColor: '#f1f5f9',
+          borderBottom: '1px solid #e2e8f0',
+        }}
+      >
+        <LocaleSwitcher mostrarResumenRegional />
+      </div>
       <Routes>
         <Route path="/" element={<DefaultRedirect />} />
         <Route path="/login" element={<Login />} />

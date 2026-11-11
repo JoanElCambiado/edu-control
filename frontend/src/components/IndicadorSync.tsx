@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useI18n } from '../i18n'
 import { contarPrestamosPendientes } from '../services/syncService'
 import { forzarSync, obtenerEstadoSync, suscribirSync } from '../services/syncOrchestrator'
 import './IndicadorSync.css'
@@ -21,6 +22,7 @@ function suscribirRed(alCambiar: () => void): () => void {
 const leerRed = () => (typeof navigator === 'undefined' ? true : navigator.onLine)
 
 function IndicadorSync() {
+  const { t, dir } = useI18n()
   const enLinea = useSyncExternalStore(suscribirRed, leerRed, () => true)
   const orquestador = useSyncExternalStore(suscribirSync, obtenerEstadoSync, obtenerEstadoSync)
 
@@ -31,13 +33,13 @@ function IndicadorSync() {
 
   let texto: string
   if (!enLinea) {
-    texto = 'Sin conexión'
+    texto = t('sync.offline')
   } else if (sincronizando) {
-    texto = 'Sincronizando...'
+    texto = t('sync.syncing')
   } else if (prestamosPendientes > 0) {
-    texto = 'Pendiente de enviar'
+    texto = t('sync.pendingSend')
   } else {
-    texto = 'Datos al día'
+    texto = t('sync.onlineUpToDate')
   }
 
   const variante = !enLinea
@@ -49,13 +51,13 @@ function IndicadorSync() {
         : 'ok'
 
   return (
-    <div className={`sync sync--${variante}`} role="status" aria-live="polite">
+    <div className={`sync sync--${variante}`} dir={dir} role="status" aria-live="polite">
       <span className="sync-punto" aria-hidden="true" />
       <span className="sync-texto">{texto}</span>
 
       {prestamosPendientes > 0 && (
         <span className="sync-badge">
-          {prestamosPendientes} {prestamosPendientes === 1 ? 'préstamo' : 'préstamos'} sin enviar
+          {t('loans.pendingCount', { count: prestamosPendientes })}
         </span>
       )}
 
@@ -64,11 +66,9 @@ function IndicadorSync() {
         type="button"
         disabled={!enLinea || sincronizando}
         onClick={() => void forzarSync()}
-        title={
-          enLinea ? orquestador.mensaje : 'Se enviará automáticamente al volver la conexión'
-        }
+        title={enLinea ? orquestador.mensaje : t('sync.autoSendHint')}
       >
-        Enviar ahora
+        {t('sync.sendNow')}
       </button>
     </div>
   )

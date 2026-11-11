@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "code": "ar-SA",
+    "name": "العربية (المملكة العربية السعودية)",
+    "currency": "SAR",
+    "direction": "rtl"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "title": "إيدو كنترول",
+    "subtitle": "أدخل بيانات الاعتماد للمتابعة",
+    "usernameLabel": "رقم الهوية أو اسم المستخدم",
+    "usernamePlaceholder": "مثال: 1070000001 أو Elena Torres",
+    "usernameValidation": "يُسمح فقط بالحروف والأرقام والمسافات والرموز . - _",
+    "passwordLabel": "كلمة المرور",
+    "submit": "دخول",
+    "verifying": "جارٍ التحقق…",
+    "logout": "تسجيل الخروج",
+    "logoutConfirm": "هل ترغب في تسجيل الخروج؟",
+    "invalidCredentials": "بيانات الاعتماد غير صحيحة",
+    "noLocalUsersOffline": "لا يوجد مستخدمون محفوظون على هذا الجهاز. اتصل بالإنترنت مرة واحدة لتنزيلهم.",
+    "noLocalUsersConnect": "لا يوجد مستخدمون على هذا الجهاز. اتصل بالإنترنت لتنزيلهم.",
+    "accessValidationError": "تعذر التحقق من الوصول. يرجى المحاولة مرة أخرى."
+  },
+  "loans": {
+    "title": "إدارة الإعارات",
+    "newLoan": "إعارة جديدة",
+    "activeLoans": "الإعارات النشطة",
+    "activeLoansDetail": "الإعارات الجارية في الوقت الحالي",
+    "overdueUsers": "المستخدمون المتأخرون",
+    "noOverdueUsers": "لا يوجد مستخدمون متأخرون",
+    "returnDate": "تاريخ الإرجاع المتوقع",
+    "replacementPenalty": "تكلفة الاستبدال التقديرية",
+    "pendingCount": {
+      "zero": "لا توجد إعارات معلقة للمزامنة",
+      "one": "إعارة واحدة ({{count}}) غير مرسلة",
+      "two": "إعارتان ({{count}}) غير مرسلتين",
+      "few": "{{count}} إعارات غير مرسلة",
+      "many": "{{count}} إعارة غير مرسلة",
+      "other": "{{count}} إعارة غير مرسلة"
+    },
+    "itemsCount": {
+      "zero": "لا توجد إعارات مسجلة",
+      "one": "إعارة واحدة ({{count}}) مسجلة",
+      "two": "إعارتان ({{count}}) مسجلتان",
+      "few": "{{count}} إعارات مسجلة",
+      "many": "{{count}} إعارة مسجلة",
+      "other": "{{count}} إعارة مسجلة"
+    }
+  },
+  "inventory": {
+    "title": "دليل الأدوات",
+    "status": "حالة المخزون",
+    "available": "متاح",
+    "unavailable": "غير متاح",
+    "condition": {
+      "excelente": "ممتاز",
+      "bueno": "جيد",
+      "regular": "متوسط",
+      "mantenimiento": "تحت الصيانة"
+    },
+    "topTools": "الأدوات الأكثر إعارة",
+    "unitsCount": {
+      "zero": "لا توجد وحدات متاحة",
+      "one": "وحدة واحدة ({{count}}) متاحة",
+      "two": "وحدتان ({{count}}) متاحتان",
+      "few": "{{count}} وحدات متاحة",
+      "many": "{{count}} وحدة متاحة",
+      "other": "{{count}} وحدة متاحة"
+    }
+  },
+  "sync": {
+    "onlineUpToDate": "البيانات محدّثة",
+    "offline": "غير متصل",
+    "syncing": "جارٍ المزامنة...",
+    "pendingSend": "بانتظار الإرسال",
+    "sendNow": "إرسال الآن",
+    "autoSendHint": "سيتم الإرسال تلقائياً عند عودة الاتصال"
+  },
+  "locale": {
+    "label": "اللغة والمنطقة",
+    "es-CO": "Español (Colombia)",
+    "en-US": "English (United States)",
+    "ar-SA": "العربية (المملكة العربية السعودية)"
+  }
+}
+

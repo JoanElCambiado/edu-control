@@ -1,5 +1,6 @@
 import { db } from '../database/db'
 import type { EntidadSync, SyncMeta, Usuario } from '../database/models'
+import { obtenerCabecerasAuth } from './session'
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api') as string
 const API_URL = `${API_BASE}/sync`
@@ -133,7 +134,11 @@ async function empujarEntidad(entidad: EntidadSync): Promise<ResultadoSync> {
     try {
       res = await fetch(`${API_URL}/${entidad}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-offline-sync': 'true',
+          ...obtenerCabecerasAuth(),
+        },
         body: JSON.stringify(lote),
       })
     } catch (error) {
@@ -200,7 +205,11 @@ export async function sincronizarUsuarios(): Promise<number> {
     throw new Error('Sin conexion')
   }
 
-  const res = await fetch(`${API_URL}/usuarios`)
+  const cabeceras = obtenerCabecerasAuth()
+  const res = await fetch(
+    `${API_URL}/usuarios`,
+    Object.keys(cabeceras).length > 0 ? { headers: cabeceras } : undefined,
+  )
   if (!res.ok) {
     throw new Error(`Error al sincronizar usuarios: ${res.status}`)
   }
