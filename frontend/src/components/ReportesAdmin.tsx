@@ -1,6 +1,7 @@
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../database/db'
+import { formatearFecha, useI18n } from '../i18n'
 import { cerrarSesion, obtenerSesion } from '../services/session'
 import './ReportesAdmin.css'
 import './DashboardAdmin.css'
@@ -10,6 +11,7 @@ const LIMITE_MOROSOS = 5
 function ReportesAdmin() {
   const sesion = obtenerSesion()
   const navigate = useNavigate()
+  const { t, locale, dir } = useI18n()
 
   const reporte = useLiveQuery(async () => {
     const [prestamos, herramientas, usuarios] = await Promise.all([
@@ -36,6 +38,8 @@ function ReportesAdmin() {
           id: prestamo.id,
           nombre: titular?.nombre ?? 'Usuario no encontrado',
           documento: titular?.documento ?? 'sin documento',
+          fechaSalida: prestamo.fechaSalida,
+          fechaDevolucion: prestamo.fechaDevolucion,
         }
       })
 
@@ -65,7 +69,7 @@ function ReportesAdmin() {
   }
 
   const handleCerrarSesion = () => {
-    const acepta = window.confirm('¿Desea cerrar sesión?')
+    const acepta = window.confirm(t('auth.logoutConfirm'))
     if (!acepta) return
     cerrarSesion()
     navigate('/')
@@ -77,23 +81,23 @@ function ReportesAdmin() {
   const topHerramientas = reporte?.topHerramientas ?? []
 
   return (
-    <div className="reportes">
+    <div className="reportes" dir={dir}>
       <aside className="dashboard-sidebar">
-        <h1 className="dashboard-brand">Edu Control</h1>
+        <h1 className="dashboard-brand">{t('auth.title')}</h1>
         <nav className="dashboard-nav">
           <button
             className="dashboard-nav-button"
             type="button"
             onClick={() => navigate('/dashboard')}
           >
-            Volver
+            {t('loans.back')}
           </button>
           <button
             className="dashboard-nav-button dashboard-nav-button--danger"
             type="button"
             onClick={handleCerrarSesion}
           >
-            Cerrar Sesión
+            {t('auth.logout')}
           </button>
         </nav>
         <p className="dashboard-user">
@@ -102,25 +106,27 @@ function ReportesAdmin() {
       </aside>
 
       <main className="dashboard-content">
-        <h2 className="dashboard-title">Reportes</h2>
+        <h2 className="dashboard-title">{t('loans.reportsTitle')}</h2>
         {cargando && <p className="reportes-card-vacio">Cargando datos…</p>}
 
         <div className="reportes-grid">
           <article className="reportes-card">
-            <h3 className="reportes-card-title">Préstamos Activos</h3>
+            <h3 className="reportes-card-title">{t('loans.activeLoans')}</h3>
             <p className="reportes-card-valor">{cargando ? '…' : prestamosActivos.length}</p>
-            <p className="reportes-card-detalle">Préstamos en curso en este momento</p>
+            <p className="reportes-card-detalle">
+              {t('loans.activeLoansDetail')} ({t('loans.itemsCount', { count: prestamosActivos.length })})
+            </p>
           </article>
 
           <article className="reportes-card">
-            <h3 className="reportes-card-title">Usuarios morosos</h3>
+            <h3 className="reportes-card-title">{t('loans.overdueUsers')}</h3>
             <p className="reportes-card-valor">{cargando ? '…' : morosos.length}</p>
             {!cargando && (morosos.length > 0 ? (
               <>
                 <ul className="reportes-list">
                   {morosos.slice(0, LIMITE_MOROSOS).map((moroso) => (
                     <li className="reportes-item" key={moroso.id}>
-                      {moroso.nombre} · {moroso.documento}
+                      {moroso.nombre} · {moroso.documento} ({formatearFecha(moroso.fechaSalida, locale)} → {formatearFecha(moroso.fechaDevolucion, locale)})
                     </li>
                   ))}
                 </ul>
@@ -129,17 +135,17 @@ function ReportesAdmin() {
                 )}
               </>
             ) : (
-              <p className="reportes-card-vacio">Sin usuarios morosos</p>
+              <p className="reportes-card-vacio">{t('loans.noOverdueUsers')}</p>
             ))}
           </article>
 
           <article className="reportes-card">
-            <h3 className="reportes-card-title">Herramientas más prestadas</h3>
+            <h3 className="reportes-card-title">{t('inventory.topTools')}</h3>
             {!cargando && (topHerramientas.length > 0 ? (
               <ol className="reportes-list">
                 {topHerramientas.map((herramienta) => (
                   <li className="reportes-item" key={herramienta.nombre}>
-                    {herramienta.nombre} — {herramienta.total} préstamos
+                    {herramienta.nombre} — {t('loans.itemsCount', { count: herramienta.total })}
                   </li>
                 ))}
               </ol>

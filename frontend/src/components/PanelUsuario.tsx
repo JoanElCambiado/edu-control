@@ -2,6 +2,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../database/db'
 import type { EstadoPrestamo } from '../database/models'
+import { formatearFecha, useI18n } from '../i18n'
 import { cerrarSesion, obtenerSesion } from '../services/session'
 import './PanelUsuario.css'
 import './DashboardAdmin.css'
@@ -12,24 +13,18 @@ const ETIQUETA_ESTADO: Record<EstadoPrestamo, string> = {
   atrasado: 'Atrasado',
 }
 
-function formatearFecha(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('es-MX', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
-
 type FilaHistorial = {
   id: string
   nombreHerramienta: string
   fechaSalida: number
+  fechaDevolucion: number
   estado: EstadoPrestamo
 }
 
 function PanelUsuario() {
   const sesion = obtenerSesion()
   const navigate = useNavigate()
+  const { t, locale, dir } = useI18n()
   const sesionId = sesion?.id
 
   const herramientasDisponibles = useLiveQuery(async () => {
@@ -50,6 +45,7 @@ function PanelUsuario() {
         id: prestamo.id,
         nombreHerramienta: nombres.get(prestamo.herramientaId) ?? 'Herramienta no encontrada',
         fechaSalida: prestamo.fechaSalida,
+        fechaDevolucion: prestamo.fechaDevolucion,
         estado: prestamo.estado,
       }))
   }, [sesionId])
@@ -59,23 +55,23 @@ function PanelUsuario() {
   }
 
   const handleCerrarSesion = () => {
-    const acepta = window.confirm('¿Desea cerrar sesión?')
+    const acepta = window.confirm(t('auth.logoutConfirm'))
     if (!acepta) return
     cerrarSesion()
     navigate('/')
   }
 
   return (
-    <div className="usuario">
+    <div className="usuario" dir={dir}>
       <aside className="dashboard-sidebar">
-        <h1 className="dashboard-brand">Edu Control</h1>
+        <h1 className="dashboard-brand">{t('auth.title')}</h1>
         <nav className="dashboard-nav">
           <button
             className="dashboard-nav-button dashboard-nav-button--danger"
             type="button"
             onClick={handleCerrarSesion}
           >
-            Cerrar Sesión
+            {t('auth.logout')}
           </button>
         </nav>
         <p className="dashboard-user">
@@ -84,42 +80,46 @@ function PanelUsuario() {
       </aside>
 
       <main className="dashboard-content">
-        <h2 className="dashboard-title">Herramientas Disponibles</h2>
+        <h2 className="dashboard-title">{t('inventory.title')}</h2>
         {herramientasDisponibles === undefined ? (
           <p className="usuario-placeholder">Cargando inventario…</p>
         ) : herramientasDisponibles.length === 0 ? (
-          <p className="usuario-placeholder">No hay herramientas disponibles en este momento.</p>
+          <p className="usuario-placeholder">{t('inventory.unitsCount', { count: 0 })}</p>
         ) : (
           <div className="usuario-grid">
             {herramientasDisponibles.map((herramienta) => (
               <article className="usuario-card" key={herramienta.id}>
                 <h3 className="usuario-card-title">{herramienta.nombre}</h3>
                 <p className="usuario-card-meta">{herramienta.categoria}</p>
-                <p className="usuario-card-stock">Disponibles: {herramienta.cantidad}</p>
+                <p className="usuario-card-stock">
+                  {t('inventory.unitsCount', { count: herramienta.cantidad })}
+                </p>
               </article>
             ))}
           </div>
         )}
 
-        <h2 className="dashboard-title usuario-historial-titulo">Mi Historial</h2>
+        <h2 className="dashboard-title usuario-historial-titulo">{t('loans.myHistory')}</h2>
         {historial === undefined ? (
           <p className="usuario-placeholder">Cargando historial…</p>
         ) : historial.length === 0 ? (
-          <p className="usuario-placeholder">Todavía no tienes préstamos registrados.</p>
+          <p className="usuario-placeholder">{t('loans.itemsCount', { count: 0 })}</p>
         ) : (
           <table className="usuario-tabla">
             <thead>
               <tr>
-                <th>Herramienta</th>
-                <th>Fecha de entrega</th>
-                <th>Estado</th>
+                <th>{t('inventory.title')}</th>
+                <th>{t('loans.departureDate')}</th>
+                <th>{t('loans.returnDate')}</th>
+                <th>{t('inventory.status')}</th>
               </tr>
             </thead>
             <tbody>
               {historial.map((registro) => (
                 <tr key={registro.id}>
                   <td>{registro.nombreHerramienta}</td>
-                  <td>{formatearFecha(registro.fechaSalida)}</td>
+                  <td>{formatearFecha(registro.fechaSalida, locale)}</td>
+                  <td>{formatearFecha(registro.fechaDevolucion, locale)}</td>
                   <td>
                     <span className={`usuario-estado usuario-estado--${registro.estado}`}>
                       {ETIQUETA_ESTADO[registro.estado]}

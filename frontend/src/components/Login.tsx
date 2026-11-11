@@ -7,6 +7,7 @@ import { guardarSesion } from '../services/session'
 import { asegurarUsuariosLocales, hayRed } from '../services/syncService'
 import { registrarParEnBoveda, tokenizar } from '../services/tokenVault'
 import { validarUsuario } from '../utils/validations'
+import LocaleSwitcher from './LocaleSwitcher'
 import './Login.css'
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api') as string
@@ -143,7 +144,18 @@ function Login() {
   return (
     <main className="login" dir={dir}>
       <section className="login-card">
-        <h1 className="login-title">{t('auth.title')}</h1>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginBottom: '0.75rem',
+          }}
+        >
+          <LocaleSwitcher />
+        </div>
+        <h1 className="login-title">
+          {t('auth.title')} · {t('auth.login')}
+        </h1>
         <p className="login-subtitle">{t('auth.subtitle')}</p>
 
         <form className="login-form" onSubmit={handleSubmit}>

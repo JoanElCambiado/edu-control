@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import { db } from '../database/db'
 import type { Prestamo, Proyecto, Usuario } from '../database/models'
 import { uuidv4 } from '../database/uuid'
+import { formatearFecha, useI18n } from '../i18n'
 import { cerrarSesion, obtenerSesion } from '../services/session'
 import './NuevoPrestamo.css'
 
 function NuevoPrestamo() {
   const sesion = obtenerSesion()
   const navigate = useNavigate()
+  const { t, locale, dir } = useI18n()
   const [documentoRecibe, setDocumentoRecibe] = useState('')
   const [nombreRecibe, setNombreRecibe] = useState('')
   const [herramientaId, setHerramientaId] = useState('')
@@ -146,7 +148,7 @@ function NuevoPrestamo() {
   }
 
   const handleCerrarSesion = () => {
-    const acepta = window.confirm('¿Desea cerrar sesión?')
+    const acepta = window.confirm(t('auth.logoutConfirm'))
     if (!acepta) return
     cerrarSesion()
     navigate('/')
@@ -176,11 +178,15 @@ function NuevoPrestamo() {
   }
 
   const cargandoInventario = herramientasDisponibles === undefined
+  const totalUnidadesDisponibles = (herramientasDisponibles ?? []).reduce(
+    (acc, h) => acc + h.cantidad,
+    0,
+  )
 
   return (
-    <div className="prestamo">
+    <div className="prestamo" dir={dir}>
       <aside className="dashboard-sidebar">
-        <h1 className="dashboard-brand">Edu Control</h1>
+        <h1 className="dashboard-brand">{t('auth.title')}</h1>
         <nav className="dashboard-nav">
           {esAdministrador && (
             <button
@@ -188,7 +194,7 @@ function NuevoPrestamo() {
               type="button"
               onClick={() => navigate('/dashboard')}
             >
-              Volver
+              {t('loans.back')}
             </button>
           )}
           <button
@@ -196,7 +202,7 @@ function NuevoPrestamo() {
             type="button"
             onClick={handleCerrarSesion}
           >
-            Cerrar Sesión
+            {t('auth.logout')}
           </button>
         </nav>
         <p className="dashboard-user">
@@ -205,12 +211,16 @@ function NuevoPrestamo() {
       </aside>
 
       <main className="dashboard-content">
-        <h2 className="dashboard-title">Registrar Nuevo Préstamo</h2>
+        <h2 className="dashboard-title">{t('loans.newLoan')}</h2>
+        <p className="prestamo-placeholder" style={{ marginBottom: '1rem' }}>
+          {t('inventory.status')}:{' '}
+          <strong>{t('inventory.unitsCount', { count: totalUnidadesDisponibles })}</strong>
+        </p>
 
         <form className="prestamo-form" onSubmit={handleSubmit}>
           <div className="prestamo-field">
             <label className="prestamo-label" htmlFor="prestamo-documento">
-              Documento de quien recibe la herramienta
+              {t('loans.recipientDocumentLabel')}
             </label>
             <input
               className="prestamo-input"
@@ -241,7 +251,7 @@ function NuevoPrestamo() {
 
           <div className="prestamo-field">
             <label className="prestamo-label" htmlFor="prestamo-nombre">
-              Nombre completo {usuarioEncontrado ? '(opcional, para corregir)' : ''}
+              {t('loans.fullNameLabel')} {usuarioEncontrado ? '(opcional, para corregir)' : ''}
             </label>
             <input
               className="prestamo-input"
@@ -258,13 +268,13 @@ function NuevoPrestamo() {
 
           <div className="prestamo-field">
             <label className="prestamo-label" htmlFor="prestamo-herramienta">
-              Herramienta
+              {t('inventory.title')} ({t('inventory.status')})
             </label>
             {cargandoInventario ? (
               <p className="prestamo-placeholder">Cargando inventario…</p>
             ) : herramientasDisponibles.length === 0 ? (
               <p className="prestamo-placeholder">
-                No hay herramientas disponibles para prestar.
+                {t('inventory.unitsCount', { count: 0 })}
               </p>
             ) : (
               <select
@@ -276,11 +286,11 @@ function NuevoPrestamo() {
                 onChange={(e) => setHerramientaId(e.target.value)}
               >
                 <option value="" disabled>
-                  Seleccione una herramienta
+                  {t('loans.selectToolPlaceholder')}
                 </option>
                 {herramientasDisponibles.map((herramienta) => (
                   <option key={herramienta.id} value={herramienta.id}>
-                    {herramienta.nombre} - Disponibles: {herramienta.cantidad}
+                    {herramienta.nombre} — {t('inventory.unitsCount', { count: herramienta.cantidad })}
                   </option>
                 ))}
               </select>
@@ -354,7 +364,7 @@ function NuevoPrestamo() {
 
           <div className="prestamo-field">
             <label className="prestamo-label" htmlFor="prestamo-fecha">
-              Fecha de devolución
+              {t('loans.returnDate')}
             </label>
             <input
               className="prestamo-input"
@@ -366,6 +376,16 @@ function NuevoPrestamo() {
               value={fechaDevolucion}
               onChange={(e) => setFechaDevolucion(e.target.value)}
             />
+            <p className="prestamo-placeholder">
+              {t('loans.departureDate')}: <strong>{formatearFecha(ahora, locale)}</strong>
+              {fechaDevolucion && (
+                <>
+                  {' · '}
+                  {t('loans.returnDate')}:{' '}
+                  <strong>{formatearFecha(`${fechaDevolucion}T12:00:00Z`, locale)}</strong>
+                </>
+              )}
+            </p>
           </div>
 
           {error && <p className="prestamo-error">{error}</p>}
@@ -375,7 +395,7 @@ function NuevoPrestamo() {
             type="submit"
             disabled={herramientasDisponibles?.length === 0}
           >
-            Guardar Préstamo
+            {t('loans.saveLoan')}
           </button>
         </form>
       </main>
