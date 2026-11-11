@@ -14,22 +14,22 @@ interface SeedUsuario {
 const usuarios: SeedUsuario[] = [
   {
     id: '10000000-0000-4000-8000-000000000001',
-    documento: '1070000001',
-    nombre: 'Elena Torres',
+    documento: '1069728699',
+    nombre: 'Joan Saenz',
     rol: 'ADMINISTRADOR',
     contrasena: '1234',
   },
   {
     id: '10000000-0000-4000-8000-000000000002',
-    documento: '1070000002',
-    nombre: 'Carlos Méndez',
+    documento: '1069728698',
+    nombre: 'Nicolas Rueda',
     rol: 'RECEPCION',
     contrasena: '1234',
   },
   {
     id: '10000000-0000-4000-8000-000000000003',
-    documento: '1070000003',
-    nombre: 'Luis Pérez',
+    documento: '1069728697',
+    nombre: 'Andres Reina',
     rol: 'USUARIO',
     contrasena: '1234',
   },
